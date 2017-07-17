@@ -32,3 +32,6 @@ HEADERS += \
 
 FORMS += \
         cmainwindow.ui
+
+DISTFILES += \
+    README.md
