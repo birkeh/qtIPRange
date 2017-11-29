@@ -7,6 +7,8 @@
 #include <QStandardItemModel>
 #include <QMainWindow>
 
+#include <QSqlDatabase>
+
 
 namespace Ui {
 class cMainWindow;
@@ -28,6 +30,12 @@ private slots:
 private:
 	Ui::cMainWindow*		ui;
 	QStandardItemModel*		m_lpIPRangeModel;
+
+	QSqlDatabase			m_db;
+	cIPRangeList			m_ipRangeList;
+
+	void					loadIPRangeList();
+	void					displayIPRangeList();
 };
 
 #endif // CMAINWINDOW_H

@@ -7,32 +7,17 @@
 
 bool rangeSort(cIPRange* lpRange1, cIPRange* lpRange2)
 {
-	if(lpRange1->IPAddressBase().IPAddressBin() < lpRange2->IPAddressBase().IPAddressBin())
-		return(true);
-	else if(lpRange1->IPAddressBase().IPAddressBin() == lpRange2->IPAddressBase().IPAddressBin())
-	{
-		if(lpRange1->prefixBase() > lpRange2->prefixBase())
-			return(true);
-		else if(lpRange1->prefixBase() == lpRange2->prefixBase())
-		{
-			if(lpRange1->IPAddress().IPAddressBin() < lpRange2->IPAddress().IPAddressBin())
-				return(true);
-			else if(lpRange1->IPAddress().IPAddressBin() == lpRange2->IPAddress().IPAddressBin())
-			{
-				if(lpRange1->prefix() > lpRange2->prefix())
-					return(true);
-			}
-		}
-	}
-	return(false);
+	return(lpRange1->firstIPAddressBin() < lpRange2->firstIPAddressBin());
 }
 
-cIPRange::cIPRange()
+cIPRange::cIPRange() :
+	m_bOK(true)
 {
 	setIPRange("0.0.0.0/24");
 }
 
-cIPRange::cIPRange(const QString& szIPRange)
+cIPRange::cIPRange(const QString& szIPRange) :
+	m_bOK(true)
 {
 	setIPRange(szIPRange);
 }
@@ -54,8 +39,10 @@ bool cIPRange::setIPRange(const QString& szIPRange)
 	if(szPrefix.toInt() < 1 || szPrefix.toInt() > 32)
 		return(false);
 
-	m_IPAddress.setIPAddress(cIPAddress::ip2bin(szIPAddress) & ~((1 << (32 - m_iPrefix))-1));
 	m_iPrefix	= szPrefix.toInt();
+	m_IPAddress.setIPAddress(cIPAddress::ip2bin(szIPAddress) & ~((1 << (32 - m_iPrefix))-1));
+
+	m_szName	= szIPRange;
 
 	return(true);
 }
@@ -115,6 +102,16 @@ QString cIPRange::range()
 	return(QString("%1/%2").arg(m_IPAddress.IPAddress()).arg(m_iPrefix));
 }
 
+void cIPRange::setOK(const bool& bOK)
+{
+	m_bOK	= bOK;
+}
+
+bool cIPRange::ok()
+{
+	return(m_bOK);
+}
+
 QString cIPRange::name()
 {
 	return(m_szName);
@@ -133,6 +130,18 @@ qint16 cIPRange::prefixBase()
 QString cIPRange::rangeBase()
 {
 	return(QString("%1/%2").arg(m_IPAddressBase.IPAddress()).arg(m_iPrefixBase));
+}
+
+bool cIPRange::ipInRange(const QString& szIPAddress)
+{
+	return(ipInRange(cIPAddress::ip2bin(szIPAddress)));
+}
+
+bool cIPRange::ipInRange(const qint64& iIPAddress)
+{
+	if(iIPAddress >= firstIPAddressBin() && iIPAddress <= lastIPAddressBin())
+		return(true);
+	return(false);
 }
 
 void cIPRange::setName(QString& szName)
@@ -184,104 +193,47 @@ cIPRange* cIPRangeList::add(const QString& szIPRange)
 	return(lpNew);
 }
 
-bool cIPRangeList::load(const QString& szFilename)
+void cIPRangeList::sort()
 {
-	clean();
-
-	QFile				file(szFilename);
-	if(!file.open(QFile::ReadOnly | QFile::Text))
-		return(false);
-
-	QDomDocument		doc;
-	QString				errorStr;
-	int					errorLine;
-	int					errorColumn;
-	if(!doc.setContent(&file, false, &errorStr, &errorLine, &errorColumn))
-		return(false);
-
-	file.close();
-
-	QDomElement			root	= doc.documentElement();
-	if(root.tagName().compare("IPRanges", Qt::CaseInsensitive))
-		return(false);
-
-	QDomNode			child				= root.firstChild();
-
-	while(!child.isNull())
-	{
-		if(!child.toElement().tagName().compare("IPRange", Qt::CaseInsensitive))
-		{
-			QDomElement	element	= child.toElement();
-			QString	szIPRange	= element.attribute("IPRange");
-			QString	szName;
-			QString	szLocation;
-			QString	szAddress;
-			QString	szCity;
-			QString	szRange;
-
-			QDomNode	child1	= element.firstChild();
-
-			while(!child1.isNull())
-			{
-				if(!child1.toElement().tagName().compare("Name", Qt::CaseInsensitive))
-					szName		= child1.toElement().text();
-//				else if(!child1.toElement().tagName().compare("Location", Qt::CaseInsensitive))
-//					szLocation	= child1.toElement().text();
-//				else if(!child1.toElement().tagName().compare("Address", Qt::CaseInsensitive))
-//					szAddress	= child1.toElement().text();
-//				else if(!child1.toElement().tagName().compare("City", Qt::CaseInsensitive))
-//					szCity		= child1.toElement().text();
-				else if(!child1.toElement().tagName().compare("Range", Qt::CaseInsensitive))
-					szRange		= child1.toElement().text();
-
-				child1	= child1.nextSibling();
-			}
-
-			cIPRange*	lpIPRange	= add(szRange);
-			lpIPRange->setName(szName);
-//			lpIPRange->setLocation(szLocation);
-//			lpIPRange->setAddress(szAddress);
-//			lpIPRange->setCity(szCity);
-			lpIPRange->setBaseRange(szIPRange);
-		}
-
-		child	= child.nextSibling();
-	}
-
-	std::sort(begin(), end(), rangeSort);
-
-	return(true);
+	qSort(begin(), end(), rangeSort);
 }
 
-bool cIPRangeList::fillList(QStandardItemModel* lpModel)
+void cIPRangeList::verify()
 {
-	QStandardItem*	lpRoot	= 0;
-	QString			szOldRange("");
+	if(!count())
+		return;
 
-	for(int z = 0;z < count();z++)
+	if(count() == 1)
+		at(0)->setOK(true);
+
+	for(int x = 0;x < count();x++)
+		at(x)->setOK(true);
+
+	for(int x = 0;x < count()-1;x++)
 	{
-		cIPRange*	lpRange		= at(z);
+		cIPRange*	r1	= at(x);
+		cIPRange*	r2	= at(x+1);
 
-		if(lpRange->rangeBase() != szOldRange)
+		if(r1->lastIPAddressBin() >= r2->firstIPAddressBin())
 		{
-			szOldRange	= lpRange->rangeBase();
-			lpRoot			= new QStandardItem(szOldRange);
-//			QVariant	v	= qVariantFromValue(lpVideos->set());
-//			lpRoot->setData(v, Qt::UserRole);
-			lpModel->appendRow(lpRoot);
+			r1->setOK(false);
+			r2->setOK(false);
 		}
-
-		QList<QStandardItem*>	lpItems;
-		lpItems.append(new QStandardItem(lpRange->range()));
-		lpItems.append(new QStandardItem(lpRange->name()));
-//		lpItems.append(new QStandardItem(lpRange->location()));
-//		lpItems.append(new QStandardItem(lpRange->address()));
-//		lpItems.append(new QStandardItem(lpRange->city()));
-
-		QVariant	v	= qVariantFromValue(lpRange);
-		lpItems.at(0)->setData(v, Qt::UserRole);
-		lpRoot->appendRow(lpItems);
 	}
+}
 
-	return(true);
+cIPRange* cIPRangeList::findRange(const QString& szIPAddress)
+{
+	return(findRange(cIPAddress::ip2bin(szIPAddress)));
+}
+
+cIPRange* cIPRangeList::findRange(const qint64& iIPAddress)
+{
+	for(int x = 0;x < count();x++)
+	{
+		cIPRange*	lpIPRange	= at(x);
+		if(lpIPRange->ipInRange(iIPAddress))
+			return(lpIPRange);
+	}
+	return(0);
 }

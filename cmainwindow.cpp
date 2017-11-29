@@ -7,6 +7,9 @@
 #include <QTime>
 #include <QDebug>
 
+#include <QSqlQuery>
+#include <QSqlError>
+
 
 cMainWindow::cMainWindow(QWidget *parent) :
 	QMainWindow(parent),
@@ -18,17 +21,65 @@ cMainWindow::cMainWindow(QWidget *parent) :
 	ui->m_lpIPRangeList->setModel(m_lpIPRangeModel);
 //	ui->m_lpIPRangeView->setItemDelegate(new cVideoViewItemDelegate());
 
-	cIPRange	ipRange("10.0.0.1/24");
+	m_db	= QSqlDatabase::addDatabase("QSQLITE");
+	m_db.setHostName("localhost");
+	m_db.setDatabaseName(QString("%1%2qtIPRange.sqlite").arg(QDir::homePath()).arg(QDir::separator()));
+	if(!m_db.open())
+		return;
 
-	QString		tmp;
+	QSqlQuery	query;
 
-	tmp	= ipRange.firstIPAddress();
-	tmp	= ipRange.lastIPAddress();
-	tmp	= ipRange.broadcastIPAddress();
-	tmp	= ipRange.netmask();
-	tmp	= ipRange.range();
+	if(!m_db.tables().contains("country"))
+	{
+		query.exec("CREATE TABLE country ("
+					"id INTEGER PRIMARY KEY, "
+					"name TEXT"
+				   ")");
+	}
 
-	tmp	= "";
+	if(!m_db.tables().contains("federal_state"))
+	{
+		query.exec("CREATE TABLE federal_state ( "
+				   "id INTEGER PRIMARY KEY, "
+				   "name TEXT)");
+	}
+
+	if(!m_db.tables().contains("city"))
+	{
+		query.exec("CREATE TABLE city ( "
+				   "id INTEGER PRIMARY KEY, "
+				   "name TEXT, "
+				   "postal_code INTEGER)");
+	}
+
+	if(!m_db.tables().contains("location"))
+	{
+		query.exec("CREATE TABLE location ( "
+				   "id INTEGER PRIMARY KEY, "
+				   "name TEXT, "
+				   "location TEXT, "
+				   "alternate_location TEXT, "
+				   "address TEXT, "
+				   "country_id INTEGER, "
+				   "federal_state_id INTEGER, "
+				   "city_id INTEGER)");
+	}
+
+	if(!m_db.tables().contains("ip_range_location"))
+	{
+		query.exec("CREATE TABLE ip_range_location ( "
+				   "name TEXT, "
+				   "location_id INTEGER, "
+				   "subnet INTEGER, "
+				   "prefix INTEGER, "
+				   "subnet1 INTEGER, "
+				   "subnet2 INTEGER, "
+				   "subnet3 INTEGER, "
+				   "mask INTEGER)");
+	}
+
+	loadIPRangeList();
+	displayIPRangeList();
 }
 
 cMainWindow::~cMainWindow()
@@ -38,6 +89,13 @@ cMainWindow::~cMainWindow()
 
 void cMainWindow::on_m_lpMenuFileOpen_triggered()
 {
+/*
+	m_ipRangeList.add("1.46.103.0/25");
+	m_ipRangeList.sort();
+	m_ipRangeList.verify();
+	displayIPRangeList();
+*/
+/*
 	QDir	dir;
 	QString	strHome		= dir.homePath() + QDir::separator();
 	QString	strFileName = QFileDialog::getOpenFileName(this, tr("Open IP Ranges"), strHome, tr("IP Ranges Files (*.xml)"));
@@ -59,6 +117,7 @@ void cMainWindow::on_m_lpMenuFileOpen_triggered()
 	ui->m_lpIPRangeList->resizeColumnToContents(2);
 	ui->m_lpIPRangeList->resizeColumnToContents(3);
 	ui->m_lpIPRangeList->resizeColumnToContents(4);
+*/
 }
 
 void cMainWindow::on_m_lpMenuFileSave_triggered()
@@ -67,4 +126,51 @@ void cMainWindow::on_m_lpMenuFileSave_triggered()
 
 void cMainWindow::on_m_lpMenuFileSaveAs_triggered()
 {
+}
+
+void cMainWindow::loadIPRangeList()
+{
+	QSqlQuery	query;
+
+	query.exec("SELECT name FROM ip_range_location");
+	while(query.next())
+		m_ipRangeList.add(query.value("name").toString());
+
+	m_ipRangeList.sort();
+	m_ipRangeList.verify();
+}
+
+void cMainWindow::displayIPRangeList()
+{
+	m_lpIPRangeModel->clear();
+
+	QStringList	header;
+	header << "Name" << "Range" << "Base IP" << "Prefix" << "Subnet Mask" << "Broadcast IP" << "First IP" << "Last IP";
+
+	m_lpIPRangeModel->setHorizontalHeaderLabels(header);
+
+	for(int x = 0;x < m_ipRangeList.count();x++)
+	{
+		QList<QStandardItem*>	lpItems;
+
+		for(int z = 0;z < header.count();z++)
+			lpItems.append(new QStandardItem);
+
+		cIPRange*		lpRange	= m_ipRangeList.at(x);
+
+		lpItems.at(0)->setText(lpRange->name());
+		lpItems.at(1)->setText(lpRange->range());
+		lpItems.at(2)->setText(lpRange->IPAddress().IPAddress());
+		lpItems.at(3)->setText(QString("%1").arg(lpRange->prefix()));
+		lpItems.at(4)->setText(lpRange->netmask());
+		lpItems.at(5)->setText(lpRange->broadcastIPAddress());
+		lpItems.at(6)->setText(lpRange->firstIPAddress());
+		lpItems.at(7)->setText(lpRange->lastIPAddress());
+		lpItems.at(0)->setData(QVariant::fromValue(lpRange), Qt::UserRole);
+
+		if(!lpRange->ok())
+			lpItems.at(0)->setBackground(Qt::red);
+
+		m_lpIPRangeModel->appendRow(lpItems);
+	}
 }
