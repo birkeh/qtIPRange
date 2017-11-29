@@ -7,7 +7,6 @@
 #include <QMetaType>
 #include <QString>
 #include <QList>
-#include <QStandardItemModel>
 
 
 class cIPRangeList;
@@ -32,15 +31,14 @@ public:
 	bool			ok();
 
 	void			setName(QString& szName);
-	void			setBaseRange(QString& szIPRange);
 
 	cIPAddress		IPAddress();
 	qint16			prefix();
 
 	QString			name();
-	cIPAddress		IPAddressBase();
-	qint16			prefixBase();
-	QString			rangeBase();
+
+	void			setLocation(const qint32 iLocation);
+	qint32			location();
 
 	bool			ipInRange(const QString& szIPAddress);
 	bool			ipInRange(const qint64& iIPAddress);
@@ -48,8 +46,7 @@ private:
 	cIPAddress		m_IPAddress;
 	qint16			m_iPrefix;
 	QString			m_szName;
-	cIPAddress		m_IPAddressBase;
-	qint16			m_iPrefixBase;
+	qint32			m_iLocation;
 	bool			m_bOK;
 	qint32			netmaskBin();
 };

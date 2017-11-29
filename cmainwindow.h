@@ -3,6 +3,9 @@
 
 
 #include "ciprange.h"
+#include "clocation.h"
+
+#include "ciprangeitemdelegate.h"
 
 #include <QStandardItemModel>
 #include <QMainWindow>
@@ -33,6 +36,9 @@ private:
 
 	QSqlDatabase			m_db;
 	cIPRangeList			m_ipRangeList;
+	cLocationList			m_locationList;
+
+	void					loadLocationList();
 
 	void					loadIPRangeList();
 	void					displayIPRangeList();

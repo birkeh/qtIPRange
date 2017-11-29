@@ -10,6 +10,9 @@
 #include <QSqlQuery>
 #include <QSqlError>
 
+#include <QFile>
+#include <QTextStream>
+
 
 cMainWindow::cMainWindow(QWidget *parent) :
 	QMainWindow(parent),
@@ -19,7 +22,7 @@ cMainWindow::cMainWindow(QWidget *parent) :
 
 	m_lpIPRangeModel			= new QStandardItemModel(0, 1);
 	ui->m_lpIPRangeList->setModel(m_lpIPRangeModel);
-//	ui->m_lpIPRangeView->setItemDelegate(new cVideoViewItemDelegate());
+	ui->m_lpIPRangeList->setItemDelegate(new cIPRangeItemDelegate());
 
 	m_db	= QSqlDatabase::addDatabase("QSQLITE");
 	m_db.setHostName("localhost");
@@ -78,6 +81,7 @@ cMainWindow::cMainWindow(QWidget *parent) :
 				   "mask INTEGER)");
 	}
 
+	loadLocationList();
 	loadIPRangeList();
 	displayIPRangeList();
 }
@@ -89,6 +93,25 @@ cMainWindow::~cMainWindow()
 
 void cMainWindow::on_m_lpMenuFileOpen_triggered()
 {
+	QFile file("c:\\temp\\out.txt");
+	if(!file.open(QIODevice::WriteOnly | QIODevice::Text))
+		return;
+
+	QTextStream out(&file);
+
+	for(int x = 0;x < m_ipRangeList.count();x++)
+	{
+		cIPRange*	lpRange		= m_ipRangeList.at(x);
+		cLocation*	lpLocation	= m_locationList.find(lpRange->location());
+
+		out << lpRange->name();
+		out << "\t";
+		out << lpLocation->name();
+		out << "\n";
+	}
+
+	file.close();
+
 /*
 	m_ipRangeList.add("1.46.103.0/25");
 	m_ipRangeList.sort();
@@ -128,13 +151,34 @@ void cMainWindow::on_m_lpMenuFileSaveAs_triggered()
 {
 }
 
+void cMainWindow::loadLocationList()
+{
+	QSqlQuery	query;
+
+	query.exec("SELECT id, name, location, alternate_location, address, country_id, federal_state_id, city_id FROM location ORDER BY name");
+	while(query.next())
+	{
+		cLocation*	lpLocation	= m_locationList.add(query.value("id").toInt());
+		lpLocation->setName(query.value("name").toString());
+		lpLocation->setLocation(query.value("location").toString());
+		lpLocation->setAlternateLocation(query.value("alternate_location").toString());
+		lpLocation->setAddress(query.value("address").toString());
+		lpLocation->setCountryID(query.value("country_id").toInt());
+		lpLocation->setFederalStateID(query.value("federal_state_id").toInt());
+		lpLocation->setCityID(query.value("city_id").toInt());
+	}
+}
+
 void cMainWindow::loadIPRangeList()
 {
 	QSqlQuery	query;
 
-	query.exec("SELECT name FROM ip_range_location");
+	query.exec("SELECT name, location_id FROM ip_range_location");
 	while(query.next())
-		m_ipRangeList.add(query.value("name").toString());
+	{
+		cIPRange*	lpIPRange	= m_ipRangeList.add(query.value("name").toString());
+		lpIPRange->setLocation(query.value("location_id").toInt());
+	}
 
 	m_ipRangeList.sort();
 	m_ipRangeList.verify();
@@ -145,7 +189,7 @@ void cMainWindow::displayIPRangeList()
 	m_lpIPRangeModel->clear();
 
 	QStringList	header;
-	header << "Name" << "Range" << "Base IP" << "Prefix" << "Subnet Mask" << "Broadcast IP" << "First IP" << "Last IP";
+	header << "Name" << "Range" << "Base IP" << "Prefix" << "Subnet Mask" << "Broadcast IP" << "First IP" << "Last IP" << "Location";
 
 	m_lpIPRangeModel->setHorizontalHeaderLabels(header);
 
@@ -156,7 +200,8 @@ void cMainWindow::displayIPRangeList()
 		for(int z = 0;z < header.count();z++)
 			lpItems.append(new QStandardItem);
 
-		cIPRange*		lpRange	= m_ipRangeList.at(x);
+		cIPRange*		lpRange		= m_ipRangeList.at(x);
+		cLocation*		lpLocation	= m_locationList.find(lpRange->location());
 
 		lpItems.at(0)->setText(lpRange->name());
 		lpItems.at(1)->setText(lpRange->range());
@@ -166,11 +211,18 @@ void cMainWindow::displayIPRangeList()
 		lpItems.at(5)->setText(lpRange->broadcastIPAddress());
 		lpItems.at(6)->setText(lpRange->firstIPAddress());
 		lpItems.at(7)->setText(lpRange->lastIPAddress());
+		if(lpLocation)
+			lpItems.at(8)->setText(lpLocation->name());
+
 		lpItems.at(0)->setData(QVariant::fromValue(lpRange), Qt::UserRole);
+		lpItems.at(8)->setData(QVariant::fromValue(&m_locationList), Qt::UserRole);
 
 		if(!lpRange->ok())
 			lpItems.at(0)->setBackground(Qt::red);
 
 		m_lpIPRangeModel->appendRow(lpItems);
 	}
+
+	for(int z = 0;z < header.count();z++)
+		ui->m_lpIPRangeList->resizeColumnToContents(z);
 }

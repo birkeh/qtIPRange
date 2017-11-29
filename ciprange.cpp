@@ -11,12 +11,14 @@ bool rangeSort(cIPRange* lpRange1, cIPRange* lpRange2)
 }
 
 cIPRange::cIPRange() :
+	m_iLocation(-1),
 	m_bOK(true)
 {
 	setIPRange("0.0.0.0/24");
 }
 
 cIPRange::cIPRange(const QString& szIPRange) :
+	m_iLocation(-1),
 	m_bOK(true)
 {
 	setIPRange(szIPRange);
@@ -117,19 +119,14 @@ QString cIPRange::name()
 	return(m_szName);
 }
 
-cIPAddress cIPRange::IPAddressBase()
+void cIPRange::setLocation(const qint32 iLocation)
 {
-	return(m_IPAddressBase);
+	m_iLocation	= iLocation;
 }
 
-qint16 cIPRange::prefixBase()
+qint32 cIPRange::location()
 {
-	return(m_iPrefixBase);
-}
-
-QString cIPRange::rangeBase()
-{
-	return(QString("%1/%2").arg(m_IPAddressBase.IPAddress()).arg(m_iPrefixBase));
+	return(m_iLocation);
 }
 
 bool cIPRange::ipInRange(const QString& szIPAddress)
@@ -147,27 +144,6 @@ bool cIPRange::ipInRange(const qint64& iIPAddress)
 void cIPRange::setName(QString& szName)
 {
 	m_szName	= szName;
-}
-
-void cIPRange::setBaseRange(QString &szIPRange)
-{
-	if(!szIPRange.contains("/"))
-		return;
-
-	QString	szIPAddress;
-	QString	szPrefix;
-
-	szIPAddress	= szIPRange.left(szIPRange.indexOf("/"));
-	szPrefix	= szIPRange.mid(szIPAddress.length()+1);
-
-	if(!cIPAddress::isValid(szIPAddress))
-		return;
-
-	if(szPrefix.toInt() < 1 || szPrefix.toInt() > 32)
-		return;
-
-	m_IPAddressBase.setIPAddress(szIPAddress);
-	m_iPrefixBase	= szPrefix.toInt();
 }
 
 void cIPRangeList::clean()
@@ -195,7 +171,7 @@ cIPRange* cIPRangeList::add(const QString& szIPRange)
 
 void cIPRangeList::sort()
 {
-	qSort(begin(), end(), rangeSort);
+	std::sort(begin(), end(), rangeSort);
 }
 
 void cIPRangeList::verify()

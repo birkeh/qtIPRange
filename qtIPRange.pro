@@ -27,12 +27,16 @@ SOURCES += \
         main.cpp \
         cmainwindow.cpp \
     cipaddress.cpp \
-    ciprange.cpp
+    ciprange.cpp \
+    ciprangeitemdelegate.cpp \
+    clocation.cpp
 
 HEADERS += \
         cmainwindow.h \
     cipaddress.h \
-    ciprange.h
+    ciprange.h \
+    ciprangeitemdelegate.h \
+    clocation.h
 
 FORMS += \
         cmainwindow.ui
