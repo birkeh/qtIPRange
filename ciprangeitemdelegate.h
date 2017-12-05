@@ -2,10 +2,10 @@
 #define CIPRANGEITEMDELEGATE_H
 
 
+#include "ciprange.h"
+
 #include <QStyledItemDelegate>
 #include <QStandardItem>
-
-#include "ciprange.h"
 
 
 class cIPRangeItemDelegate : public QStyledItemDelegate
