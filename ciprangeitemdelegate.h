@@ -3,6 +3,9 @@
 
 
 #include <QStyledItemDelegate>
+#include <QStandardItem>
+
+#include "ciprange.h"
 
 
 class cIPRangeItemDelegate : public QStyledItemDelegate
@@ -15,6 +18,9 @@ public:
 	virtual QWidget*	createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const;
 	virtual void		setEditorData(QWidget *editor, const QModelIndex &index) const;
 	virtual void		setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const;
+
+signals:
+	void				ipRangeChanged(cIPRange* lpIPRange, QStandardItem* lpItem) const;
 };
 
 #endif // CIPRANGEITEMDELEGATE_H

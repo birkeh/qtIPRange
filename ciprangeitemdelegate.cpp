@@ -1,10 +1,8 @@
 #include "ciprangeitemdelegate.h"
-#include "ciprange.h"
 #include "clocation.h"
 
 #include <QComboBox>
 #include <QLineEdit>
-#include <QStandardItem>
 
 
 cIPRangeItemDelegate::cIPRangeItemDelegate(QObject* parent) :
@@ -54,6 +52,7 @@ void cIPRangeItemDelegate::setEditorData ( QWidget *editor, const QModelIndex &i
 void cIPRangeItemDelegate::setModelData ( QWidget *editor, QAbstractItemModel *model, const QModelIndex &index ) const
 {
 	QComboBox*	lpComboBox	= qobject_cast<QComboBox*>(editor);
+	QLineEdit*	lpLineEdit	= qobject_cast<QLineEdit*>(editor);
 
 	if(lpComboBox)
 	{
@@ -62,13 +61,19 @@ void cIPRangeItemDelegate::setModelData ( QWidget *editor, QAbstractItemModel *m
 		cIPRange*	lpIPRange	= qvariant_cast<cIPRange*>(index1.data(Qt::UserRole));
 		lpIPRange->setLocation(lpComboBox->currentData().toInt());
 	}
-	else
+	else if(lpLineEdit)
 	{
-		QStyledItemDelegate::setModelData(editor, model, index);
+		QString				strText		= lpLineEdit->text();
+
+		if(!cIPRange::isValid(strText))
+			return;
+
 		cIPRange*			lpIPRange	= qvariant_cast<cIPRange*>(index.data(Qt::UserRole));
 		QStandardItemModel*	lpModel		= (QStandardItemModel*)index.model();
 		QStandardItem*		lpItem		= lpModel->itemFromIndex(index);
-		QString				strText		= lpItem->text();
-		lpIPRange->setName(strText);
+
+		lpIPRange->setIPRange(strText);
+		QStyledItemDelegate::setModelData(editor, model, index);
+		emit ipRangeChanged(lpIPRange, lpItem);
 	}
 }

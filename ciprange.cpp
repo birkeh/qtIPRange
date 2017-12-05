@@ -24,6 +24,26 @@ cIPRange::cIPRange(const QString& szIPRange) :
 	setIPRange(szIPRange);
 }
 
+bool cIPRange::isValid(const QString& szIPRange)
+{
+	if(!szIPRange.contains("/"))
+		return(false);
+
+	QString	szIPAddress;
+	QString	szPrefix;
+
+	szIPAddress	= szIPRange.left(szIPRange.indexOf("/"));
+	szPrefix	= szIPRange.mid(szIPAddress.length()+1);
+
+	if(!cIPAddress::isValid(szIPAddress))
+		return(false);
+
+	if(szPrefix.toInt() < 1 || szPrefix.toInt() > 32)
+		return(false);
+
+	return(true);
+}
+
 bool cIPRange::setIPRange(const QString& szIPRange)
 {
 	if(!szIPRange.contains("/"))
@@ -212,4 +232,9 @@ cIPRange* cIPRangeList::findRange(const qint64& iIPAddress)
 			return(lpIPRange);
 	}
 	return(0);
+}
+
+qint32 cIPRangeList::position(cIPRange* lpIPRange)
+{
+	return(indexOf(lpIPRange));
 }

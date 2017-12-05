@@ -29,6 +29,7 @@ private slots:
 	void					on_m_lpMenuFileOpen_triggered();
 	void					on_m_lpMenuFileSave_triggered();
 	void					on_m_lpMenuFileSaveAs_triggered();
+	void					ipRangeChanged(cIPRange* lpIPRange, QStandardItem* lpItem);
 
 private:
 	Ui::cMainWindow*		ui;

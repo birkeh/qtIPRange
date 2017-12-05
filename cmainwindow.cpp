@@ -24,6 +24,8 @@ cMainWindow::cMainWindow(QWidget *parent) :
 	ui->m_lpIPRangeList->setModel(m_lpIPRangeModel);
 	ui->m_lpIPRangeList->setItemDelegate(new cIPRangeItemDelegate());
 
+	connect((cIPRangeItemDelegate*)ui->m_lpIPRangeList->itemDelegate(), SIGNAL(ipRangeChanged(cIPRange*,QStandardItem*)), this, SLOT(ipRangeChanged(cIPRange*,QStandardItem*)));
+
 	m_db	= QSqlDatabase::addDatabase("QSQLITE");
 	m_db.setHostName("localhost");
 	m_db.setDatabaseName(QString("%1%2qtIPRange.sqlite").arg(QDir::homePath()).arg(QDir::separator()));
@@ -227,4 +229,65 @@ void cMainWindow::displayIPRangeList()
 
 	for(int z = 0;z < header.count();z++)
 		ui->m_lpIPRangeList->resizeColumnToContents(z);
+}
+
+void cMainWindow::ipRangeChanged(cIPRange *lpIPRange, QStandardItem *lpItem)
+{
+	QList<QStandardItem*>	lpItems;
+	QModelIndex				index	= lpItem->index();
+	QStandardItemModel*		lpModel	= (QStandardItemModel*)index.model();
+
+	for(int x = 0;x < 9;x++)
+		lpItems.append(lpModel->itemFromIndex(lpModel->index(index.row(), x)));
+
+	lpItems.at(0)->setText(lpIPRange->name());
+	lpItems.at(1)->setText(lpIPRange->range());
+	lpItems.at(2)->setText(lpIPRange->IPAddress().IPAddress());
+	lpItems.at(3)->setText(QString("%1").arg(lpIPRange->prefix()));
+	lpItems.at(4)->setText(lpIPRange->netmask());
+	lpItems.at(5)->setText(lpIPRange->broadcastIPAddress());
+	lpItems.at(6)->setText(lpIPRange->firstIPAddress());
+	lpItems.at(7)->setText(lpIPRange->lastIPAddress());
+
+	m_ipRangeList.sort();
+	m_ipRangeList.verify();
+
+	qint32					iPos	= m_ipRangeList.position(lpIPRange);
+	qint32					iOldPos	= index.row();
+
+	if(iPos >= 0)
+	{
+		QList<QStandardItem*>	itemList	= m_lpIPRangeModel->takeRow(index.row());
+		m_lpIPRangeModel->insertRow(iPos, itemList);
+		ui->m_lpIPRangeList->setCurrentIndex(lpModel->index(iPos, 0));
+	}
+
+	QBrush	brush	= m_lpIPRangeModel->item(0, 1)->background();
+
+	qint32	iMin;
+	qint32	iMax;
+
+	iMin	= (iPos > 0) ? iPos-1 : 0;
+	iMax	= (iPos < (m_lpIPRangeModel->rowCount()-1)) ? iPos + 2 : m_lpIPRangeModel->rowCount();
+	for(int x = iMin;x < iMax;x++)
+	{
+		QStandardItem*	lpItem	= m_lpIPRangeModel->item(x, 0);
+		cIPRange*		lpRange	= qvariant_cast<cIPRange*>(lpItem->data(Qt::UserRole));
+		if(lpRange && lpRange->ok())
+			lpItem->setBackground(brush);
+		else
+			lpItem->setBackground(Qt::red);
+	}
+
+	iMin	= (iOldPos > 0) ? iOldPos-1 : 0;
+	iMax	= (iOldPos < (m_lpIPRangeModel->rowCount()-1)) ? iOldPos + 2 : m_lpIPRangeModel->rowCount();
+	for(int x = iMin;x < iMax;x++)
+	{
+		QStandardItem*	lpItem	= m_lpIPRangeModel->item(x, 0);
+		cIPRange*		lpRange	= qvariant_cast<cIPRange*>(lpItem->data(Qt::UserRole));
+		if(lpRange && lpRange->ok())
+			lpItem->setBackground(brush);
+		else
+			lpItem->setBackground(Qt::red);
+	}
 }

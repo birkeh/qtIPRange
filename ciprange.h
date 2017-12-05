@@ -17,6 +17,8 @@ public:
 	cIPRange();
 	cIPRange(const QString& szIPRange);
 
+	static bool		isValid(const QString& szIPRange);
+
 	bool			setIPRange(const QString& szIPRange);
 	QString			firstIPAddress();
 	QString			lastIPAddress();
@@ -42,6 +44,7 @@ public:
 
 	bool			ipInRange(const QString& szIPAddress);
 	bool			ipInRange(const qint64& iIPAddress);
+
 private:
 	cIPAddress		m_IPAddress;
 	qint16			m_iPrefix;
@@ -63,6 +66,8 @@ public:
 
 	cIPRange*		findRange(const QString& szIPAddress);
 	cIPRange*		findRange(const qint64& iIPAddress);
+
+	qint32			position(cIPRange* lpIPRange);
 };
 
 #endif // CIPRANGE_H
