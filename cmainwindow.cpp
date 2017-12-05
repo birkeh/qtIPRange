@@ -78,7 +78,9 @@ cMainWindow::cMainWindow(QWidget *parent) :
 				   "subnet1 INTEGER, "
 				   "subnet2 INTEGER, "
 				   "subnet3 INTEGER, "
-				   "mask INTEGER)");
+				   "mask INTEGER, "
+				   "iplow INTEGER, "
+				   "iphigh INTEGER)");
 	}
 
 	loadLocationList();
