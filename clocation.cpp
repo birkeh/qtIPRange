@@ -7,9 +7,10 @@ cLocation::cLocation(const qint32 &iLocationID) :
 	m_szLocation(""),
 	m_szAlternateLocation(""),
 	m_szAddress(""),
-	m_iCountryID(-1),
-	m_iFederalStateID(-1),
-	m_iCityID(-1)
+	m_szCountry(""),
+	m_szFederalState(""),
+	m_szCity(""),
+	m_iPostalCode(-1)
 {
 }
 
@@ -58,34 +59,44 @@ QString cLocation::address()
 	return(m_szAddress);
 }
 
-void cLocation::setCountryID(const qint32& iCountryID)
+void cLocation::setCountry(const QString& szCountry)
 {
-	m_iCountryID	= iCountryID;
+	m_szCountry	= szCountry;
 }
 
-qint32 cLocation::countryID()
+QString cLocation::country()
 {
-	return(m_iCountryID);
+	return(m_szCountry);
 }
 
-void cLocation::setFederalStateID(const qint32& iFederalStateID)
+void cLocation::setFederalState(const QString& szFederalState)
 {
-	m_iFederalStateID	= iFederalStateID;
+	m_szFederalState	= szFederalState;
 }
 
-qint32 cLocation::federalStateID()
+QString cLocation::federalState()
 {
-	return(m_iFederalStateID);
+	return(m_szFederalState);
 }
 
-void cLocation::setCityID(const qint32& iCityID)
+void cLocation::setCity(const QString& szCity)
 {
-	m_iCityID	= iCityID;
+	m_szCity	= szCity;
 }
 
-qint32 cLocation::cityID()
+QString cLocation::city()
 {
-	return(m_iCityID);
+	return(m_szCity);
+}
+
+void cLocation::setPostalCode(const qint16& iPostalCode)
+{
+	m_iPostalCode	= iPostalCode;
+}
+
+qint16 cLocation::postalCode()
+{
+	return(m_iPostalCode);
 }
 
 cLocation* cLocationList::add(const qint32& iLocationID)

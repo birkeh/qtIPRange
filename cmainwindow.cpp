@@ -145,7 +145,20 @@ void cMainWindow::loadLocationList()
 	{
 		QSqlQuery	query(dbMySQL);
 
-		query.exec("SELECT id, name, location, alternate_location, address, country_id, federal_state_id, city_id FROM location ORDER BY name");
+		query.exec("SELECT		l.id id, "
+				   "			l.name name, "
+				   "			l.location location, "
+				   "			l.alternate_location alternate_location, "
+				   "			l.address address, "
+				   "			c.name country, "
+				   "			f.name federal_state, "
+				   "			ci.name city, "
+				   "			ci.postal_code "
+				   "FROM		location l "
+				   "LEFT JOIN	country c ON (c.id = l.country_id) "
+				   "LEFT JOIN	federal_state f ON (f.id = l.federal_state_id) "
+				   "LEFT JOIN	city ci ON (ci.id = l.city_id) "
+				   "ORDER BY 	name");
 		while(query.next())
 		{
 			cLocation*	lpLocation	= m_locationList.add(query.value("id").toInt());
@@ -153,9 +166,10 @@ void cMainWindow::loadLocationList()
 			lpLocation->setLocation(query.value("location").toString());
 			lpLocation->setAlternateLocation(query.value("alternate_location").toString());
 			lpLocation->setAddress(query.value("address").toString());
-			lpLocation->setCountryID(query.value("country_id").toInt());
-			lpLocation->setFederalStateID(query.value("federal_state_id").toInt());
-			lpLocation->setCityID(query.value("city_id").toInt());
+			lpLocation->setCountry(query.value("country").toString());
+			lpLocation->setFederalState(query.value("federal_state").toString());
+			lpLocation->setCity(query.value("city").toString());
+			lpLocation->setPostalCode(query.value("postal_code").toInt());
 		}
 		dbMySQL.close();
 	}
@@ -206,7 +220,34 @@ void cMainWindow::displayIPRangeList()
 		lpItems.at(6)->setText(lpRange->firstIPAddress());
 		lpItems.at(7)->setText(lpRange->lastIPAddress());
 		if(lpLocation)
+		{
 			lpItems.at(8)->setText(lpLocation->name());
+
+			QString	szHint	= QString("Name: %1").arg(lpLocation->name());
+
+			if(!lpLocation->location().isEmpty())
+				szHint.append(QString("\nLocation: %1").arg(lpLocation->location()));
+
+			if(!lpLocation->alternateLocation().isEmpty())
+				szHint.append(QString("\nAlternate Location: %1").arg(lpLocation->alternateLocation()));
+
+			if(!lpLocation->address().isEmpty())
+				szHint.append(QString("\nAddress: %1").arg(lpLocation->address()));
+
+			if(!lpLocation->city().isEmpty())
+				szHint.append(QString("\nCity: %1").arg(lpLocation->city()));
+
+			if(lpLocation->postalCode() > 999)
+				szHint.append(QString("\nPostal Code: %1").arg(lpLocation->postalCode()));
+
+			if(!lpLocation->federalState().isEmpty())
+				szHint.append(QString("\nFederal State: %1").arg(lpLocation->federalState()));
+
+			if(!lpLocation->country().isEmpty())
+				szHint.append(QString("\nCountry: %1").arg(lpLocation->country()));
+
+			lpItems.at(8)->setToolTip(szHint);
+		}
 
 		lpItems.at(0)->setData(QVariant::fromValue(lpRange), Qt::UserRole);
 		lpItems.at(8)->setData(QVariant::fromValue(&m_locationList), Qt::UserRole);
@@ -259,7 +300,34 @@ void cMainWindow::displayIPAddressList()
 			lpItems.at(1)->setText(lpIPRange->range());
 		lpItems.at(2)->setText(lpIPAddress->address());
 		if(lpLocation)
+		{
 			lpItems.at(3)->setText(lpLocation->name());
+
+			QString	szHint	= QString("Name: %1").arg(lpLocation->name());
+
+			if(!lpLocation->location().isEmpty())
+				szHint.append(QString("\nLocation: %1").arg(lpLocation->location()));
+
+			if(!lpLocation->alternateLocation().isEmpty())
+				szHint.append(QString("\nAlternate Location: %1").arg(lpLocation->alternateLocation()));
+
+			if(!lpLocation->address().isEmpty())
+				szHint.append(QString("\nAddress: %1").arg(lpLocation->address()));
+
+			if(!lpLocation->city().isEmpty())
+				szHint.append(QString("\nCity: %1").arg(lpLocation->city()));
+
+			if(lpLocation->postalCode() > 999)
+				szHint.append(QString("\nPostal Code: %1").arg(lpLocation->postalCode()));
+
+			if(!lpLocation->federalState().isEmpty())
+				szHint.append(QString("\nFederal State: %1").arg(lpLocation->federalState()));
+
+			if(!lpLocation->country().isEmpty())
+				szHint.append(QString("\nCountry: %1").arg(lpLocation->country()));
+
+			lpItems.at(3)->setToolTip(szHint);
+		}
 
 		lpItems.at(0)->setData(QVariant::fromValue(lpIPAddress), Qt::UserRole);
 
@@ -432,6 +500,7 @@ void cMainWindow::filterError()
 
 	for(int x = 0;x < m_ipAddressList.count();x++)
 	{
+		QString			szHint			= QString("");
 		cIPAddress*		lpIPAddress		= m_ipAddressList.at(x);
 		cIPRange*		lpIPRange		= m_ipRangeList.findRange(lpIPAddress->IPAddressBin());
 
@@ -449,7 +518,32 @@ void cMainWindow::filterError()
 
 				lpItemRange->setText(lpIPRange->name());
 				if(lpLocation)
+				{
 					lpItemLocation->setText(lpLocation->name());
+
+					szHint.append(QString("Name: %1").arg(lpLocation->name()));
+
+					if(!lpLocation->location().isEmpty())
+						szHint.append(QString("\nLocation: %1").arg(lpLocation->location()));
+
+					if(!lpLocation->alternateLocation().isEmpty())
+						szHint.append(QString("\nAlternate Location: %1").arg(lpLocation->alternateLocation()));
+
+					if(!lpLocation->address().isEmpty())
+						szHint.append(QString("\nAddress: %1").arg(lpLocation->address()));
+
+					if(!lpLocation->city().isEmpty())
+						szHint.append(QString("\nCity: %1").arg(lpLocation->city()));
+
+					if(lpLocation->postalCode() > 999)
+						szHint.append(QString("\nPostal Code: %1").arg(lpLocation->postalCode()));
+
+					if(!lpLocation->federalState().isEmpty())
+						szHint.append(QString("\nFederal State: %1").arg(lpLocation->federalState()));
+
+					if(!lpLocation->country().isEmpty())
+						szHint.append(QString("\nCountry: %1").arg(lpLocation->country()));
+				}
 
 				lpItem->setBackground(brush);
 			}
@@ -460,6 +554,8 @@ void cMainWindow::filterError()
 
 				lpItem->setBackground(Qt::red);
 			}
+
+			lpItemLocation->setToolTip(szHint);
 		}
 
 		if(bError)
@@ -506,7 +602,7 @@ void cMainWindow::on_m_lpIPAddressList_customContextMenuRequested(const QPoint &
 
 	lpMenu->addAction("create IP range", this, SLOT(onIPRangeCreate()));
 
-	lpMenu->popup(ui->m_lpIPRangeList->viewport()->mapToGlobal(pos));
+	lpMenu->popup(ui->m_lpIPAddressList->viewport()->mapToGlobal(pos));
 }
 
 void cMainWindow::onIPRangeAdd()

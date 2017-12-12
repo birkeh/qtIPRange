@@ -26,23 +26,28 @@ public:
 	void		setAddress(const QString& szAddress);
 	QString		address();
 
-	void		setCountryID(const qint32& iCountryID);
-	qint32		countryID();
+	void		setCountry(const QString& szCountry);
+	QString		country();
 
-	void		setFederalStateID(const qint32& iFederalStateID);
-	qint32		federalStateID();
+	void		setFederalState(const QString& szFederalState);
+	QString		federalState();
 
-	void		setCityID(const qint32& iCityID);
-	qint32		cityID();
+	void		setCity(const QString& szCity);
+	QString		city();
+
+	void		setPostalCode(const qint16& iPostalCode);
+	qint16		postalCode();
+
 private:
 	qint32		m_iLocationID;
 	QString		m_szName;
 	QString		m_szLocation;
 	QString		m_szAlternateLocation;
 	QString		m_szAddress;
-	qint32		m_iCountryID;
-	qint32		m_iFederalStateID;
-	qint32		m_iCityID;
+	QString		m_szCountry;
+	QString		m_szFederalState;
+	QString		m_szCity;
+	qint16		m_iPostalCode;
 };
 
 Q_DECLARE_METATYPE(cLocation*)
