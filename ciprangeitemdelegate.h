@@ -21,6 +21,7 @@ public:
 
 signals:
 	void				ipRangeChanged(cIPRange* lpIPRange, QStandardItem* lpItem) const;
+	void				locationChanged(cIPRange* lpIPRange, QStandardItem* lpItem) const;
 };
 
 #endif // CIPRANGEITEMDELEGATE_H

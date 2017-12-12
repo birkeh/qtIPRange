@@ -3,12 +3,21 @@
 #include <QStringList>
 
 
-cIPAddress::cIPAddress()
+bool rangeSort(cIPAddress* lpIPAddress1, cIPAddress* lpIPAddress2)
+{
+	return(lpIPAddress1->IPAddressBin() < lpIPAddress2->IPAddressBin());
+}
+
+cIPAddress::cIPAddress() :
+	m_szAddress(""),
+	m_lpIPRange(0)
 {
 	setIPAddress("0.0.0.0");
 }
 
-cIPAddress::cIPAddress(const QString& szIPAddress)
+cIPAddress::cIPAddress(const QString& szIPAddress, const QString& szAddress) :
+	m_szAddress(szAddress),
+	m_lpIPRange(0)
 {
 	setIPAddress(szIPAddress);
 }
@@ -57,6 +66,26 @@ qint64 cIPAddress::IPAddressBin()
 	return(m_iIPAddress);
 }
 
+void cIPAddress::setAddress(const QString& szAddress)
+{
+	m_szAddress	= szAddress;
+}
+
+QString cIPAddress::address()
+{
+	return(m_szAddress);
+}
+
+void cIPAddress::setIPRange(cIPRange* lpIPRange)
+{
+	m_lpIPRange	= lpIPRange;
+}
+
+cIPRange* cIPAddress::ipRange()
+{
+	return(m_lpIPRange);
+}
+
 qint64 cIPAddress::ip2bin(const QString& szIPAddress)
 {
 	qint64	ip	= 0;
@@ -77,4 +106,24 @@ QString cIPAddress::bin2ip(const qint64& iIPAddress)
 {
 	QString	szIP	= QString("%1.%2.%3.%4").arg((iIPAddress >> 24) & 0xFF).arg((iIPAddress >> 16) & 0xFF).arg((iIPAddress >> 8) & 0xFF).arg(iIPAddress& 0xFF);
 	return(szIP);
+}
+
+cIPAddress* cIPAddressList::add(const QString& szIPAddress, const QString& szAddress)
+{
+	cIPAddress*	lpNew;
+/*
+	for(int x = 0;x < count();x++)
+	{
+		if(at(x)->IPAddress() == szIPAddress)
+			return(at(x));
+	}
+*/
+	lpNew	= new cIPAddress(szIPAddress, szAddress);
+	append(lpNew);
+	return(lpNew);
+}
+
+void cIPAddressList::sort()
+{
+	std::sort(begin(), end(), rangeSort);
 }

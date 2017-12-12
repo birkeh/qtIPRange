@@ -29,17 +29,20 @@ SOURCES += \
     cipaddress.cpp \
     ciprange.cpp \
     ciprangeitemdelegate.cpp \
-    clocation.cpp
+    clocation.cpp \
+    cnewiprange.cpp
 
 HEADERS += \
         cmainwindow.h \
     cipaddress.h \
     ciprange.h \
     ciprangeitemdelegate.h \
-    clocation.h
+    clocation.h \
+    cnewiprange.h
 
 FORMS += \
-        cmainwindow.ui
+        cmainwindow.ui \
+    cnewiprange.ui
 
 DISTFILES += \
     README.md

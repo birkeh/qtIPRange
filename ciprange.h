@@ -27,6 +27,7 @@ public:
 	QString			broadcastIPAddress();
 	qint64			broadcastIPAddressBIN();
 	QString			netmask();
+	quint64			netmaskBin();
 	QString			range();
 
 	void			setOK(const bool &bOK);
@@ -38,6 +39,7 @@ public:
 	qint16			prefix();
 
 	QString			name();
+	QString			oldName();
 
 	void			setLocation(const qint32 iLocation);
 	qint32			location();
@@ -45,13 +47,17 @@ public:
 	bool			ipInRange(const QString& szIPAddress);
 	bool			ipInRange(const qint64& iIPAddress);
 
+	qint64			subnetBIN();
+	qint64			subnet1BIN();
+	qint64			subnet2BIN();
+	qint64			subnet3BIN();
 private:
 	cIPAddress		m_IPAddress;
 	qint16			m_iPrefix;
 	QString			m_szName;
+	QString			m_szOldName;
 	qint32			m_iLocation;
 	bool			m_bOK;
-	qint32			netmaskBin();
 };
 
 Q_DECLARE_METATYPE(cIPRange*)

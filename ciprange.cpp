@@ -11,6 +11,7 @@ bool rangeSort(cIPRange* lpRange1, cIPRange* lpRange2)
 }
 
 cIPRange::cIPRange() :
+	m_szOldName(""),
 	m_iLocation(-1),
 	m_bOK(true)
 {
@@ -65,6 +66,8 @@ bool cIPRange::setIPRange(const QString& szIPRange)
 	m_IPAddress.setIPAddress(cIPAddress::ip2bin(szIPAddress) & ~((1 << (32 - m_iPrefix))-1));
 
 	m_szName	= szIPRange;
+	if(m_szOldName.isEmpty())
+		m_szOldName	= m_szName;
 
 	return(true);
 }
@@ -99,7 +102,7 @@ qint64 cIPRange::broadcastIPAddressBIN()
 	return(m_IPAddress.IPAddressBin() | ~netmaskBin());
 }
 
-qint32 cIPRange::netmaskBin()
+quint64 cIPRange::netmaskBin()
 {
 	return(~((1 << (32 - m_iPrefix))-1));
 }
@@ -124,6 +127,26 @@ QString cIPRange::range()
 	return(QString("%1/%2").arg(m_IPAddress.IPAddress()).arg(m_iPrefix));
 }
 
+qint64 cIPRange::subnetBIN()
+{
+	return(m_IPAddress.IPAddressBin());
+}
+
+qint64 cIPRange::subnet1BIN()
+{
+	return(subnetBIN() & 0xFFFF0000);
+}
+
+qint64 cIPRange::subnet2BIN()
+{
+	return(subnetBIN() & 0xFF000000);
+}
+
+qint64 cIPRange::subnet3BIN()
+{
+	return(subnetBIN() & 0x1200000);
+}
+
 void cIPRange::setOK(const bool& bOK)
 {
 	m_bOK	= bOK;
@@ -137,6 +160,11 @@ bool cIPRange::ok()
 QString cIPRange::name()
 {
 	return(m_szName);
+}
+
+QString cIPRange::oldName()
+{
+	return(m_szOldName);
 }
 
 void cIPRange::setLocation(const qint32 iLocation)
@@ -173,6 +201,9 @@ void cIPRangeList::clean()
 
 cIPRange* cIPRangeList::add(const QString& szIPRange)
 {
+	if(!cIPRange::isValid(szIPRange))
+		return(0);
+
 	cIPRange*	lpNew	= new cIPRange(szIPRange);
 
 	for(int x = 0;x < count();x++)
@@ -225,12 +256,28 @@ cIPRange* cIPRangeList::findRange(const QString& szIPAddress)
 
 cIPRange* cIPRangeList::findRange(const qint64& iIPAddress)
 {
-	for(int x = 0;x < count();x++)
+	if(iIPAddress < at(0)->firstIPAddressBin())
+		return(0);
+
+	qint32	iStep	= count()/2;
+
+	for(int x = 0;x < count();x += iStep)
 	{
 		cIPRange*	lpIPRange	= at(x);
-		if(lpIPRange->ipInRange(iIPAddress))
+		if(iIPAddress < lpIPRange->firstIPAddressBin())
+		{
+			if(iStep == 1)
+				return(0);
+			x -= iStep;
+			iStep /= 2;
+			continue;
+		}
+		else if(iIPAddress > lpIPRange->lastIPAddressBin())
+			continue;
+		else
 			return(lpIPRange);
 	}
+
 	return(0);
 }
 

@@ -59,7 +59,15 @@ void cIPRangeItemDelegate::setModelData ( QWidget *editor, QAbstractItemModel *m
 		model->setData(index, lpComboBox->currentText(), Qt::EditRole);
 		QModelIndex	index1		= model->index(index.row(), 0);
 		cIPRange*	lpIPRange	= qvariant_cast<cIPRange*>(index1.data(Qt::UserRole));
-		lpIPRange->setLocation(lpComboBox->currentData().toInt());
+
+		if(lpIPRange->location() != lpComboBox->currentData().toInt())
+		{
+			QStandardItemModel*	lpModel		= (QStandardItemModel*)index.model();
+			QStandardItem*		lpItem		= lpModel->itemFromIndex(index1);
+
+			lpIPRange->setLocation(lpComboBox->currentData().toInt());
+			locationChanged(lpIPRange, lpItem);
+		}
 	}
 	else if(lpLineEdit)
 	{
