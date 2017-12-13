@@ -24,11 +24,17 @@
 
 cMainWindow::cMainWindow(QWidget *parent) :
 	QMainWindow(parent),
-	ui(new Ui::cMainWindow)
+	ui(new Ui::cMainWindow),
+	m_szIPRangeFindText(""),
+	m_IPRangeFindFlags(cFindDialogIPRange::FindInAll),
+	m_szIPAddressFindText(""),
+	m_IPAddressFindFlags(cFindDialogIPAddress::FindInAll)
 {
 	ui->setupUi(this);
 
 	ui->m_lpTab->setCurrentIndex(0);
+	ui->m_lpMenuActionFindPreviousError->setEnabled(false);
+	ui->m_lpMenuActionFindNextError->setEnabled(false);
 
 	m_lpProgressBar				= new QProgressBar(this);
 	m_lpProgressBar->setVisible(false);
@@ -422,11 +428,9 @@ void cMainWindow::ipRangeChanged(cIPRange *lpIPRange, QStandardItem *lpItem)
 	filterError();
 }
 
-void cMainWindow::locationChanged(cIPRange* lpIPRange, QStandardItem* lpItem)
+void cMainWindow::locationChanged(cIPRange* lpIPRange, QStandardItem* /*lpItem*/)
 {
 	saveRange(lpIPRange);
-
-//updateLocation
 }
 
 void cMainWindow::saveRange(cIPRange* lpIPRange)
@@ -462,7 +466,7 @@ void cMainWindow::saveRange(cIPRange* lpIPRange)
 	query.exec(strSQL);
 }
 
-void cMainWindow::on_m_lpMenuQctionVerify_triggered()
+void cMainWindow::on_m_lpMenuActionVerify_triggered()
 {
 	verifyIPAddressList();
 }
@@ -807,7 +811,7 @@ void cMainWindow::onIPRangeDelete()
 	filterError();
 }
 
-void cMainWindow::on_actionLoad_clients_from_DB_triggered()
+void cMainWindow::on_m_lpMenuFileLoadClientsFromDB_triggered()
 {
 	QSqlDatabase	dbMySQL	= QSqlDatabase::addDatabase("QMYSQL", "mysql");
 	dbMySQL.setHostName("10.69.208.60");
@@ -856,7 +860,7 @@ void cMainWindow::on_actionLoad_clients_from_DB_triggered()
 	displayIPAddressList();
 }
 
-void cMainWindow::on_actionReload_location_list_triggered()
+void cMainWindow::on_m_lpMenuFileReloadLocationList_triggered()
 {
 	loadLocationList();
 	loadIPRangeList();
@@ -882,7 +886,7 @@ void cMainWindow::on_m_lpFilterOldLocation_clicked()
 	filterError();
 }
 
-void cMainWindow::on_actionto_SQL_file_triggered()
+void cMainWindow::on_m_lpMenuFileExportToSQL_triggered()
 {
 	QDir	dir;
 	QString	strHome		= dir.homePath() + QDir::separator();
@@ -943,7 +947,7 @@ void cMainWindow::on_actionto_SQL_file_triggered()
 	ui->m_lpStatusBar->clearMessage();
 }
 
-void cMainWindow::on_actionto_database_triggered()
+void cMainWindow::on_m_lpMenuFileExportToDatabase_triggered()
 {
 	QSqlDatabase	dbMySQL	= QSqlDatabase::addDatabase("QMYSQL", "mysql");
 	dbMySQL.setHostName("10.69.208.60");
@@ -1029,7 +1033,7 @@ void cMainWindow::on_actionto_database_triggered()
 	ui->m_lpStatusBar->clearMessage();
 }
 
-void cMainWindow::on_actionIP_ranges_from_DB_triggered()
+void cMainWindow::on_m_lpMenuImportIPRangesFromDB_triggered()
 {
 	QSqlDatabase	dbMySQL	= QSqlDatabase::addDatabase("QMYSQL", "mysql");
 	dbMySQL.setHostName("10.69.208.60");
@@ -1120,4 +1124,430 @@ void cMainWindow::on_actionIP_ranges_from_DB_triggered()
 	loadIPRangeList();
 	displayIPRangeList();
 	filterError();
+}
+
+void cMainWindow::on_m_lpTab_currentChanged(int index)
+{
+	if(index)
+	{
+		ui->m_lpMenuActionFindPreviousError->setEnabled(true);
+		ui->m_lpMenuActionFindNextError->setEnabled(true);
+	}
+	else
+	{
+		ui->m_lpMenuActionFindPreviousError->setEnabled(false);
+		ui->m_lpMenuActionFindNextError->setEnabled(false);
+	}
+}
+
+void cMainWindow::on_m_lpMenuActionFind_triggered()
+{
+	if(ui->m_lpTab->currentIndex())
+		findIPAddress();
+	else
+		findIPRange();
+}
+
+void cMainWindow::on_m_lpMenuActionFindNextError_triggered()
+{
+	if(!m_lpIPAddressModel->rowCount())
+		return;
+
+	QModelIndex	index		= ui->m_lpIPAddressList->currentIndex();
+	qint32		iSelected	= -1;
+	QModelIndex	parent		= m_lpIPAddressModel->invisibleRootItem()->index();
+
+	if(index.isValid())
+		iSelected	= index.row();
+
+	iSelected++;
+	if(iSelected == m_lpIPAddressModel->rowCount())
+		iSelected = 0;
+
+	qint32		iFirst		= iSelected;
+
+	for(int x = iSelected;x < m_lpIPAddressModel->rowCount();x++)
+	{
+		QStandardItem*	lpItem		= m_lpIPAddressModel->item(x, 0);
+
+		if(lpItem->background() == Qt::red && !ui->m_lpIPAddressList->isRowHidden(x, parent))
+		{
+			ui->m_lpIPAddressList->selectionModel()->setCurrentIndex(lpItem->index(), QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+			ui->m_lpIPAddressList->scrollTo(lpItem->index());
+			return;
+		}
+	}
+
+	if(iFirst)
+	{
+		for(int x = 0;x < iFirst;x++)
+		{
+			QStandardItem*	lpItem		= m_lpIPAddressModel->item(x, 0);
+
+			if(lpItem->background() == Qt::red && !ui->m_lpIPAddressList->isRowHidden(x, parent))
+			{
+				ui->m_lpIPAddressList->selectionModel()->setCurrentIndex(lpItem->index(), QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+				ui->m_lpIPAddressList->scrollTo(lpItem->index());
+				return;
+			}
+		}
+	}
+
+	QMessageBox::information(this, "Find", "Nothing found.");
+}
+
+void cMainWindow::on_m_lpMenuActionFindPreviousError_triggered()
+{
+	if(!m_lpIPAddressModel->rowCount())
+		return;
+
+	QModelIndex	index		= ui->m_lpIPAddressList->currentIndex();
+	qint32		iSelected	= m_lpIPAddressModel->rowCount();
+	QModelIndex	parent		= m_lpIPAddressModel->invisibleRootItem()->index();
+
+	if(index.isValid())
+		iSelected	= index.row();
+
+	iSelected--;
+	if(iSelected < 0)
+		iSelected = m_lpIPAddressModel->rowCount()-1;
+
+	qint32		iFirst		= iSelected;
+
+	for(int x = iSelected;x >= 0;x--)
+	{
+		QStandardItem*	lpItem		= m_lpIPAddressModel->item(x, 0);
+
+		if(lpItem->background() == Qt::red && !ui->m_lpIPAddressList->isRowHidden(x, parent))
+		{
+			ui->m_lpIPAddressList->selectionModel()->setCurrentIndex(lpItem->index(), QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+			ui->m_lpIPAddressList->scrollTo(lpItem->index());
+			return;
+		}
+	}
+
+	if(iFirst)
+	{
+		for(int x = m_lpIPAddressModel->rowCount()-1;x > iFirst;x--)
+		{
+			QStandardItem*	lpItem		= m_lpIPAddressModel->item(x, 0);
+
+			if(lpItem->background() == Qt::red && !ui->m_lpIPAddressList->isRowHidden(x, parent))
+			{
+				ui->m_lpIPAddressList->selectionModel()->setCurrentIndex(lpItem->index(), QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+				ui->m_lpIPAddressList->scrollTo(lpItem->index());
+				return;
+			}
+		}
+	}
+
+	QMessageBox::information(this, "Find", "Nothing found.");
+}
+
+void cMainWindow::on_m_lpMenuActionFindNext_triggered()
+{
+	if(ui->m_lpTab->currentIndex())
+	{
+		if(m_szIPAddressFindText.isEmpty())
+			findIPAddress();
+		else
+			findNextIPAddress();
+	}
+	else
+	{
+		if(m_szIPRangeFindText.isEmpty())
+			findIPRange();
+		else
+			findNextIPRange();
+	}
+}
+
+void cMainWindow::findIPRange()
+{
+	cFindDialogIPRange*	lpFind	= new cFindDialogIPRange(this);
+	lpFind->setFindText(m_szIPRangeFindText);
+	lpFind->setFindFlags(m_IPRangeFindFlags);
+
+	if(lpFind->exec() == QDialog::Rejected)
+	{
+		delete lpFind;
+		return;
+	}
+
+	m_szIPRangeFindText	= lpFind->findText();
+	m_IPRangeFindFlags	= lpFind->findFlags();
+
+	delete lpFind;
+
+	findNextIPRange();
+}
+
+void cMainWindow::findNextIPRange()
+{
+	if(!m_lpIPRangeModel->rowCount())
+		return;
+
+	QModelIndex	index		= ui->m_lpIPRangeList->currentIndex();
+	qint32		iSelected	= -1;
+
+	if(index.isValid())
+		iSelected	= index.row();
+
+	iSelected++;
+	if(iSelected == m_lpIPRangeModel->rowCount())
+		iSelected = 0;
+
+	qint32		iFirst		= iSelected;
+
+	for(int x = iSelected;x < m_lpIPRangeModel->rowCount();x++)
+	{
+		QStandardItem*	lpItem		= m_lpIPRangeModel->item(x, 0);
+		cIPRange*		lpRange		= qvariant_cast<cIPRange*>(lpItem->data(Qt::UserRole));
+
+		if(!lpRange)
+			continue;
+
+		if(matchIPRange(lpItem, lpRange, cFindDialogIPRange::FindInName))
+			return;
+		if(matchIPRange(lpItem, lpRange, cFindDialogIPRange::FindInRange))
+			return;
+		if(matchIPRange(lpItem, lpRange, cFindDialogIPRange::FindInBaseIP))
+			return;
+		if(matchIPRange(lpItem, lpRange, cFindDialogIPRange::FindInPrefix))
+			return;
+		if(matchIPRange(lpItem, lpRange, cFindDialogIPRange::FindInSubnetMask))
+			return;
+		if(matchIPRange(lpItem, lpRange, cFindDialogIPRange::FindInBroadcastIP))
+			return;
+		if(matchIPRange(lpItem, lpRange, cFindDialogIPRange::FindInFirstIP))
+			return;
+		if(matchIPRange(lpItem, lpRange, cFindDialogIPRange::FindInLastIP))
+			return;
+		if(matchIPRange(lpItem, lpRange, cFindDialogIPRange::FindInLocation))
+			return;
+	}
+
+	if(iFirst)
+	{
+		for(int x = 0;x < iFirst;x++)
+		{
+			QStandardItem*	lpItem		= m_lpIPRangeModel->item(x, 0);
+			cIPRange*		lpRange		= qvariant_cast<cIPRange*>(lpItem->data(Qt::UserRole));
+
+			if(!lpRange)
+				continue;
+
+			if(matchIPRange(lpItem, lpRange, cFindDialogIPRange::FindInName))
+				return;
+			if(matchIPRange(lpItem, lpRange, cFindDialogIPRange::FindInRange))
+				return;
+			if(matchIPRange(lpItem, lpRange, cFindDialogIPRange::FindInBaseIP))
+				return;
+			if(matchIPRange(lpItem, lpRange, cFindDialogIPRange::FindInPrefix))
+				return;
+			if(matchIPRange(lpItem, lpRange, cFindDialogIPRange::FindInSubnetMask))
+				return;
+			if(matchIPRange(lpItem, lpRange, cFindDialogIPRange::FindInBroadcastIP))
+				return;
+			if(matchIPRange(lpItem, lpRange, cFindDialogIPRange::FindInFirstIP))
+				return;
+			if(matchIPRange(lpItem, lpRange, cFindDialogIPRange::FindInLastIP))
+				return;
+			if(matchIPRange(lpItem, lpRange, cFindDialogIPRange::FindInLocation))
+				return;
+		}
+	}
+
+	QMessageBox::information(this, "Find", "Nothing found.");
+}
+
+void cMainWindow::findIPAddress()
+{
+	cFindDialogIPAddress*	lpFind	= new cFindDialogIPAddress(this);
+	lpFind->setFindText(m_szIPAddressFindText);
+	lpFind->setFindFlags(m_IPAddressFindFlags);
+
+	if(lpFind->exec() == QDialog::Rejected)
+	{
+		delete lpFind;
+		return;
+	}
+
+	m_szIPAddressFindText	= lpFind->findText();
+	m_IPAddressFindFlags	= lpFind->findFlags();
+
+	delete lpFind;
+
+	findNextIPAddress();
+}
+
+void cMainWindow::findNextIPAddress()
+{
+	if(!m_lpIPAddressModel->rowCount())
+		return;
+
+	QModelIndex	index		= ui->m_lpIPAddressList->currentIndex();
+	qint32		iSelected	= -1;
+
+	if(index.isValid())
+		iSelected	= index.row();
+
+	iSelected++;
+	if(iSelected == m_lpIPAddressModel->rowCount())
+		iSelected = 0;
+
+	qint32		iFirst		= iSelected;
+
+	for(int x = iSelected;x < m_lpIPAddressModel->rowCount();x++)
+	{
+		QStandardItem*	lpItem		= m_lpIPAddressModel->item(x, 0);
+		cIPAddress*		lpIPAddress	= qvariant_cast<cIPAddress*>(lpItem->data(Qt::UserRole));
+
+		if(!lpIPAddress)
+			continue;
+
+		if(matchIPAddress(lpItem, lpIPAddress, cFindDialogIPAddress::FindInIPAddress))
+			return;
+		if(matchIPAddress(lpItem, lpIPAddress, cFindDialogIPAddress::FindInRange))
+			return;
+		if(matchIPAddress(lpItem, lpIPAddress, cFindDialogIPAddress::FindInOriLocation))
+			return;
+		if(matchIPAddress(lpItem, lpIPAddress, cFindDialogIPAddress::FindInLocation))
+			return;
+	}
+
+	if(iFirst)
+	{
+		for(int x = 0;x < iFirst;x++)
+		{
+			QStandardItem*	lpItem		= m_lpIPAddressModel->item(x, 0);
+			cIPAddress*		lpIPAddress	= qvariant_cast<cIPAddress*>(lpItem->data(Qt::UserRole));
+
+			if(!lpIPAddress)
+				continue;
+
+			if(matchIPAddress(lpItem, lpIPAddress, cFindDialogIPAddress::FindInIPAddress))
+				return;
+			if(matchIPAddress(lpItem, lpIPAddress, cFindDialogIPAddress::FindInRange))
+				return;
+			if(matchIPAddress(lpItem, lpIPAddress, cFindDialogIPAddress::FindInOriLocation))
+				return;
+			if(matchIPAddress(lpItem, lpIPAddress, cFindDialogIPAddress::FindInLocation))
+				return;
+		}
+	}
+
+	QMessageBox::information(this, "Find", "Nothing found.");
+}
+
+bool cMainWindow::matchIPRange(QStandardItem* lpItem, cIPRange* lpRange, cFindDialogIPRange::FindIn flag)
+{
+	bool	bFound	= false;
+
+	if(m_IPRangeFindFlags & flag)
+	{
+		switch(flag)
+		{
+		case cFindDialogIPRange::FindInName:
+			if(lpRange->name().contains(m_szIPRangeFindText, Qt::CaseInsensitive))
+				bFound	= true;
+			break;
+		case cFindDialogIPRange::FindInRange:
+			if(lpRange->range().contains(m_szIPRangeFindText, Qt::CaseInsensitive))
+				bFound	= true;
+			break;
+		case cFindDialogIPRange::FindInBaseIP:
+			if(lpRange->IPAddress().IPAddress().contains(m_szIPRangeFindText, Qt::CaseInsensitive))
+				bFound	= true;
+			break;
+		case cFindDialogIPRange::FindInPrefix:
+			if(QString("%1").arg(lpRange->prefix()).contains(m_szIPRangeFindText, Qt::CaseInsensitive))
+				bFound	= true;
+			break;
+		case cFindDialogIPRange::FindInSubnetMask:
+			if(lpRange->netmask().contains(m_szIPRangeFindText, Qt::CaseInsensitive))
+				bFound	= true;
+			break;
+		case cFindDialogIPRange::FindInBroadcastIP:
+			if(lpRange->broadcastIPAddress().contains(m_szIPRangeFindText, Qt::CaseInsensitive))
+				bFound	= true;
+			break;
+		case cFindDialogIPRange::FindInFirstIP:
+			if(lpRange->firstIPAddress().contains(m_szIPRangeFindText, Qt::CaseInsensitive))
+				bFound	= true;
+			break;
+		case cFindDialogIPRange::FindInLastIP:
+			if(lpRange->lastIPAddress().contains(m_szIPRangeFindText, Qt::CaseInsensitive))
+				bFound	= true;
+			break;
+		case cFindDialogIPRange::FindInLocation:
+		{
+			cLocation*	lpLocation	= m_locationList.find(lpRange->location());
+			if(lpLocation)
+			{
+				if(lpLocation->name().contains(m_szIPRangeFindText, Qt::CaseInsensitive))
+					bFound	= true;
+			}
+			break;
+		}
+		case cFindDialogIPRange::FindInAll:
+			break;
+		}
+	}
+
+	if(bFound)
+	{
+		ui->m_lpIPRangeList->selectionModel()->setCurrentIndex(lpItem->index(), QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+		ui->m_lpIPRangeList->scrollTo(lpItem->index());
+	}
+	return(bFound);
+}
+
+bool cMainWindow::matchIPAddress(QStandardItem* lpItem, cIPAddress *lpIPAddress, cFindDialogIPAddress::FindIn flag)
+{
+	bool		bFound	= false;
+	cIPRange*	lpIPRange	= m_ipRangeList.findRange(lpIPAddress->IPAddressBin());
+
+	if(m_IPAddressFindFlags & flag)
+	{
+		switch(flag)
+		{
+		case cFindDialogIPAddress::FindInIPAddress:
+			if(lpIPAddress->IPAddress().contains(m_szIPAddressFindText, Qt::CaseInsensitive))
+				bFound	= true;
+			break;
+		case cFindDialogIPAddress::FindInRange:
+			if(lpIPRange)
+			{
+				if(lpIPRange->name().contains(m_szIPAddressFindText, Qt::CaseInsensitive))
+					bFound	= true;
+			}
+			break;
+		case cFindDialogIPAddress::FindInOriLocation:
+			if(lpIPAddress->address().contains(m_szIPAddressFindText, Qt::CaseInsensitive))
+				bFound	= true;
+			break;
+		case cFindDialogIPAddress::FindInLocation:
+		{
+			if(!lpIPRange)
+				break;
+			cLocation*	lpLocation	= m_locationList.find(lpIPRange->location());
+			if(lpLocation)
+			{
+				if(lpLocation->name().contains(m_szIPAddressFindText, Qt::CaseInsensitive))
+					bFound	= true;
+			}
+			break;
+		}
+		case cFindDialogIPAddress::FindInAll:
+			break;
+		}
+	}
+
+	if(bFound)
+	{
+		ui->m_lpIPAddressList->selectionModel()->setCurrentIndex(lpItem->index(), QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+		ui->m_lpIPAddressList->scrollTo(lpItem->index());
+	}
+	return(bFound);
 }

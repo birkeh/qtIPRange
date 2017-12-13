@@ -20,7 +20,7 @@
       <item>
        <widget class="QTabWidget" name="m_lpTab">
         <property name="currentIndex">
-         <number>0</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="m_lpIPRangesTab">
          <attribute name="title">
@@ -138,18 +138,18 @@
      <property name="title">
       <string>Export</string>
      </property>
-     <addaction name="actionto_SQL_file"/>
-     <addaction name="actionto_database"/>
+     <addaction name="m_lpMenuFileExportToSQL"/>
+     <addaction name="m_lpMenuFileExportToDatabase"/>
     </widget>
     <widget class="QMenu" name="menuImport">
      <property name="title">
       <string>Import</string>
      </property>
-     <addaction name="actionIP_ranges_from_DB"/>
+     <addaction name="m_lpMenuImportIPRangesFromDB"/>
     </widget>
     <addaction name="m_lpMenuFileOpen"/>
-    <addaction name="actionLoad_clients_from_DB"/>
-    <addaction name="actionReload_location_list"/>
+    <addaction name="m_lpMenuFileLoadClientsFromDB"/>
+    <addaction name="m_lpMenuFileReloadLocationList"/>
     <addaction name="menuImport"/>
     <addaction name="menuExport"/>
    </widget>
@@ -157,7 +157,11 @@
     <property name="title">
      <string>&amp;Action</string>
     </property>
-    <addaction name="m_lpMenuQctionVerify"/>
+    <addaction name="m_lpMenuActionVerify"/>
+    <addaction name="m_lpMenuActionFind"/>
+    <addaction name="m_lpMenuActionFindNext"/>
+    <addaction name="m_lpMenuActionFindPreviousError"/>
+    <addaction name="m_lpMenuActionFindNextError"/>
    </widget>
    <addaction name="m_lpMenuFile"/>
    <addaction name="m_lpMenuAction"/>
@@ -192,7 +196,7 @@
     <string>Save &amp;as...</string>
    </property>
   </action>
-  <action name="m_lpMenuQctionVerify">
+  <action name="m_lpMenuActionVerify">
    <property name="text">
     <string>&amp;Verify</string>
    </property>
@@ -211,29 +215,61 @@
     <string>by Error</string>
    </property>
   </action>
-  <action name="actionLoad_clients_from_DB">
+  <action name="m_lpMenuFileLoadClientsFromDB">
    <property name="text">
     <string>Load clients from DB</string>
    </property>
   </action>
-  <action name="actionReload_location_list">
+  <action name="m_lpMenuFileReloadLocationList">
    <property name="text">
     <string>Reload location list</string>
    </property>
   </action>
-  <action name="actionto_SQL_file">
+  <action name="m_lpMenuFileExportToSQL">
    <property name="text">
     <string>to SQL file ...</string>
    </property>
   </action>
-  <action name="actionto_database">
+  <action name="m_lpMenuFileExportToDatabase">
    <property name="text">
     <string>to database</string>
    </property>
   </action>
-  <action name="actionIP_ranges_from_DB">
+  <action name="m_lpMenuImportIPRangesFromDB">
    <property name="text">
     <string>IP ranges from DB</string>
+   </property>
+  </action>
+  <action name="m_lpMenuActionFind">
+   <property name="text">
+    <string>Find</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+F</string>
+   </property>
+  </action>
+  <action name="m_lpMenuActionFindNextError">
+   <property name="text">
+    <string>Find next error</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
+   </property>
+  </action>
+  <action name="m_lpMenuActionFindPreviousError">
+   <property name="text">
+    <string>Find previous error</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+P</string>
+   </property>
+  </action>
+  <action name="m_lpMenuActionFindNext">
+   <property name="text">
+    <string>Find next</string>
+   </property>
+   <property name="shortcut">
+    <string>F3</string>
    </property>
   </action>
  </widget>

@@ -7,6 +7,9 @@
 
 #include "ciprangeitemdelegate.h"
 
+#include "cfinddialogiprange.h"
+#include "cfinddialogipaddress.h"
+
 #include <QStandardItemModel>
 #include <QMainWindow>
 
@@ -28,57 +31,74 @@ public:
 	~cMainWindow();
 
 private slots:
-	void					on_m_lpMenuFileOpen_triggered();
-	void					on_m_lpMenuFileSave_triggered();
-	void					on_m_lpMenuFileSaveAs_triggered();
+	void						on_m_lpMenuFileOpen_triggered();
+	void						on_m_lpMenuFileSave_triggered();
+	void						on_m_lpMenuFileSaveAs_triggered();
+	void						on_m_lpMenuFileLoadClientsFromDB_triggered();
+	void						on_m_lpMenuFileReloadLocationList_triggered();
+	void						on_m_lpMenuFileExportToSQL_triggered();
+	void						on_m_lpMenuFileExportToDatabase_triggered();
+	void						on_m_lpMenuImportIPRangesFromDB_triggered();
 
-	void					ipRangeChanged(cIPRange* lpIPRange, QStandardItem* lpItem);
-	void					locationChanged(cIPRange* lpIPRange, QStandardItem* lpItem);
-	void					on_m_lpMenuQctionVerify_triggered();
+	void						on_m_lpMenuActionVerify_triggered();
+	void						on_m_lpMenuActionFindPreviousError_triggered();
+	void						on_m_lpMenuActionFindNextError_triggered();
+	void						on_m_lpMenuActionFind_triggered();
+	void						on_m_lpMenuActionFindNext_triggered();
 
-	void					on_m_lpIPRangeList_customContextMenuRequested(const QPoint &pos);
+	void						ipRangeChanged(cIPRange* lpIPRange, QStandardItem* lpItem);
+	void						locationChanged(cIPRange* lpIPRange, QStandardItem* lpItem);
 
-	void					onIPRangeAdd();
-	void					onIPRangeCreate();
-	void					onIPRangeDelete();
-	void					on_actionLoad_clients_from_DB_triggered();
+	void						on_m_lpIPRangeList_customContextMenuRequested(const QPoint &pos);
 
-	void					on_m_lpIPAddressList_customContextMenuRequested(const QPoint &pos);
-	void					on_actionReload_location_list_triggered();
-	void					on_m_lpFilter_clicked();
+	void						onIPRangeAdd();
+	void						onIPRangeCreate();
+	void						onIPRangeDelete();
 
-	void					on_m_lpFilterError_clicked();
-	void					on_m_lpFilterOldLocation_clicked();
+	void						on_m_lpIPAddressList_customContextMenuRequested(const QPoint &pos);
+	void						on_m_lpFilter_clicked();
 
-	void on_actionto_SQL_file_triggered();
+	void						on_m_lpFilterOldLocation_clicked();
+	void						on_m_lpFilterError_clicked();
 
-	void on_actionto_database_triggered();
-
-	void on_actionIP_ranges_from_DB_triggered();
+	void						on_m_lpTab_currentChanged(int index);
 
 private:
-	Ui::cMainWindow*		ui;
-	QStandardItemModel*		m_lpIPRangeModel;
-	QStandardItemModel*		m_lpIPAddressModel;
+	Ui::cMainWindow*			ui;
+	QStandardItemModel*			m_lpIPRangeModel;
+	QStandardItemModel*			m_lpIPAddressModel;
 
-	QSqlDatabase			m_db;
-	cIPRangeList			m_ipRangeList;
-	cLocationList			m_locationList;
-	cIPAddressList			m_ipAddressList;
+	QSqlDatabase				m_db;
+	cIPRangeList				m_ipRangeList;
+	cLocationList				m_locationList;
+	cIPAddressList				m_ipAddressList;
 
-	QProgressBar*			m_lpProgressBar;
+	QProgressBar*				m_lpProgressBar;
 
-	void					loadLocationList();
+	QString						m_szIPRangeFindText;
+	quint16						m_IPRangeFindFlags;
+	QString						m_szIPAddressFindText;
+	quint16						m_IPAddressFindFlags;
 
-	void					loadIPRangeList();
-	void					displayIPRangeList();
+	void						loadLocationList();
 
-	void					displayIPAddressList();
-	void					verifyIPAddressList();
+	void						loadIPRangeList();
+	void						displayIPRangeList();
 
-	void					saveRange(cIPRange *lpIPRange);
+	void						displayIPAddressList();
+	void						verifyIPAddressList();
 
-	void					filterError();
+	void						saveRange(cIPRange *lpIPRange);
+
+	void						filterError();
+
+	void						findIPRange();
+	void						findNextIPRange();
+	void						findIPAddress();
+	void						findNextIPAddress();
+
+	bool						matchIPRange(QStandardItem* lpItem, cIPRange* lpRange, cFindDialogIPRange::FindIn flag);
+	bool						matchIPAddress(QStandardItem* lpItem, cIPAddress* lpIPAddress, cFindDialogIPAddress::FindIn flag);
 };
 
 #endif // CMAINWINDOW_H

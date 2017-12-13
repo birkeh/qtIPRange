@@ -30,7 +30,9 @@ SOURCES += \
     ciprange.cpp \
     ciprangeitemdelegate.cpp \
     clocation.cpp \
-    cnewiprange.cpp
+    cnewiprange.cpp \
+    cfinddialogiprange.cpp \
+    cfinddialogipaddress.cpp
 
 HEADERS += \
         cmainwindow.h \
@@ -38,11 +40,15 @@ HEADERS += \
     ciprange.h \
     ciprangeitemdelegate.h \
     clocation.h \
-    cnewiprange.h
+    cnewiprange.h \
+    cfinddialogiprange.h \
+    cfinddialogipaddress.h
 
 FORMS += \
         cmainwindow.ui \
-    cnewiprange.ui
+    cnewiprange.ui \
+    cfinddialogiprange.ui \
+    cfinddialogipaddress.ui
 
 DISTFILES += \
     README.md
