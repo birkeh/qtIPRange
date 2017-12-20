@@ -55,6 +55,8 @@ private slots:
 	void						onIPRangeCreate();
 	void						onIPRangeDelete();
 
+	void						onLocationAdd();
+
 	void						on_m_lpIPAddressList_customContextMenuRequested(const QPoint &pos);
 	void						on_m_lpFilter_clicked();
 

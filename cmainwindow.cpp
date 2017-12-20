@@ -3,6 +3,8 @@
 
 #include "cnewiprange.h"
 
+#include "caddlocationdialog.h"
+
 #include <QFileDialog>
 #include <QDir>
 
@@ -19,7 +21,6 @@
 #include <QElapsedTimer>
 
 #include <QMessageBox>
-#include <QInputDialog>
 
 
 cMainWindow::cMainWindow(QWidget *parent) :
@@ -88,6 +89,8 @@ cMainWindow::~cMainWindow()
 
 void cMainWindow::on_m_lpMenuFileOpen_triggered()
 {
+	m_ipAddressList.clear();
+
 	QDir	dir;
 	QString	strHome		= dir.homePath() + QDir::separator();
 	QString	strFileName = QFileDialog::getOpenFileName(this, tr("Open IP Addresses"), strHome, tr("IP Addresses Files (*.sql)"));
@@ -596,6 +599,8 @@ void cMainWindow::on_m_lpIPRangeList_customContextMenuRequested(const QPoint &po
 
 	lpMenu->addAction("add", this, SLOT(onIPRangeAdd()));
 	lpMenu->addAction("delete", this, SLOT(onIPRangeDelete()));
+	lpMenu->addSeparator();
+	lpMenu->addAction("add location ...", this, SLOT(onLocationAdd()));
 
 	lpMenu->popup(ui->m_lpIPRangeList->viewport()->mapToGlobal(pos));
 }
@@ -605,6 +610,8 @@ void cMainWindow::on_m_lpIPAddressList_customContextMenuRequested(const QPoint &
 	QMenu*	lpMenu	= new QMenu(this);
 
 	lpMenu->addAction("create IP range", this, SLOT(onIPRangeCreate()));
+	lpMenu->addSeparator();
+	lpMenu->addAction("add location ...", this, SLOT(onLocationAdd()));
 
 	lpMenu->popup(ui->m_lpIPAddressList->viewport()->mapToGlobal(pos));
 }
@@ -811,8 +818,25 @@ void cMainWindow::onIPRangeDelete()
 	filterError();
 }
 
+void cMainWindow::onLocationAdd()
+{
+	cAddLocationDialog*	lpAddLocationDialog	= new cAddLocationDialog(this);
+
+	if(lpAddLocationDialog->exec() == QDialog::Rejected)
+	{
+		delete lpAddLocationDialog;
+		return;
+	}
+
+	delete lpAddLocationDialog;
+
+	on_m_lpMenuFileReloadLocationList_triggered();
+}
+
 void cMainWindow::on_m_lpMenuFileLoadClientsFromDB_triggered()
 {
+	m_ipAddressList.clear();
+
 	QSqlDatabase	dbMySQL	= QSqlDatabase::addDatabase("QMYSQL", "mysql");
 	dbMySQL.setHostName("10.69.208.60");
 	dbMySQL.setDatabaseName("reporting");

@@ -32,7 +32,9 @@ SOURCES += \
     clocation.cpp \
     cnewiprange.cpp \
     cfinddialogiprange.cpp \
-    cfinddialogipaddress.cpp
+    cfinddialogipaddress.cpp \
+    caddlocationdialog.cpp \
+    caddcitydialog.cpp
 
 HEADERS += \
         cmainwindow.h \
@@ -42,13 +44,17 @@ HEADERS += \
     clocation.h \
     cnewiprange.h \
     cfinddialogiprange.h \
-    cfinddialogipaddress.h
+    cfinddialogipaddress.h \
+    caddlocationdialog.h \
+    caddcitydialog.h
 
 FORMS += \
         cmainwindow.ui \
     cnewiprange.ui \
     cfinddialogiprange.ui \
-    cfinddialogipaddress.ui
+    cfinddialogipaddress.ui \
+    caddlocationdialog.ui \
+    caddcitydialog.ui
 
 DISTFILES += \
     README.md
