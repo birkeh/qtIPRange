@@ -193,7 +193,7 @@ void cAddLocationDialog::accept()
 	qint32		iCountry		= ui->m_lpCountry->currentData().toInt();
 
 	qint32		iFederalState	= ui->m_lpFederalState->currentData().toInt();
-	qint32		iCity			= ui->m_lpFederalState->currentData().toInt();
+	qint32		iCity			= ui->m_lpCity->currentData().toInt();
 
 	if(id() != -1)
 	{
