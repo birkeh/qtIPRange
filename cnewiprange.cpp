@@ -24,13 +24,18 @@ QString cNewIPRange::ipRange()
 	return(ui->m_lpIPRange->text());
 }
 
-void cNewIPRange::setLocation(const cLocationList& locationList)
+void cNewIPRange::setLocation(const cLocationList& locationList, const QString &szLocation)
 {
 	for(int x = 0;x < locationList.count();x++)
 	{
 		cLocation*	lpLocation	= locationList.at(x);
 		ui->m_lpLocation->addItem(locationList.at(x)->name(), locationList.at(x)->locationID());
 	}
+
+	if(szLocation.isEmpty())
+		return;
+
+	ui->m_lpLocation->setCurrentText(szLocation);
 }
 
 qint32 cNewIPRange::location()

@@ -18,6 +18,7 @@ public:
 	explicit cAddLocationDialog(QWidget *parent = 0);
 	~cAddLocationDialog();
 
+	void				setLocation(const QString& szLocation);
 	qint32				id();
 private slots:
 	void				on_m_lpAddCountry_clicked();

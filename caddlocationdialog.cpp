@@ -245,6 +245,28 @@ void cAddLocationDialog::on_m_lpLocation_textChanged(const QString &arg1)
 		ui->m_lpButtonBox->button(QDialogButtonBox::Ok)->setEnabled(true);
 }
 
+void cAddLocationDialog::setLocation(const QString& szLocation)
+{
+	ui->m_lpName->setText(szLocation);
+
+	if(!szLocation.contains(", "))
+	{
+		if(ui->m_lpCountry->findText(szLocation, Qt::MatchExactly))
+			ui->m_lpCountry->setCurrentText(szLocation);
+
+		return;
+	}
+
+	QStringList	lst	= szLocation.split(", ");
+	ui->m_lpLocation->setText(lst.at(0));
+
+	if(ui->m_lpCountry->findText(lst.at(1), Qt::MatchExactly))
+		ui->m_lpCountry->setCurrentText(lst.at(1));
+
+	if(ui->m_lpCity->findText(lst.at(0), Qt::MatchExactly))
+		ui->m_lpCity->setCurrentText(lst.at(0));
+}
+
 qint32 cAddLocationDialog::id()
 {
 	QString		szName			= ui->m_lpName->text();

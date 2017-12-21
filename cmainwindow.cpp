@@ -80,6 +80,14 @@ cMainWindow::cMainWindow(QWidget *parent) :
 	loadLocationList();
 	loadIPRangeList();
 	displayIPRangeList();
+/*
+	cIPAddress	ipAddress("91.113.117.7");
+	cIPRange*	lpIPRange;
+
+	lpIPRange	= m_ipRangeList.findRange("91.113.117.7");
+
+	lpIPRange	= 0;
+*/
 }
 
 cMainWindow::~cMainWindow()
@@ -613,6 +621,13 @@ void cMainWindow::on_m_lpIPAddressList_customContextMenuRequested(const QPoint &
 	lpMenu->addSeparator();
 	lpMenu->addAction("add location ...", this, SLOT(onLocationAdd()));
 
+	QModelIndex			index		= ui->m_lpIPAddressList->currentIndex();
+	if(index.isValid())
+	{
+		lpMenu->addSeparator();
+		lpMenu->addAction("goto IP range", this, SLOT(onGotoRange()));
+	}
+
 	lpMenu->popup(ui->m_lpIPAddressList->viewport()->mapToGlobal(pos));
 }
 
@@ -697,7 +712,7 @@ void cMainWindow::onIPRangeCreate()
 	if(!index.isValid())
 		return;
 
-	QStandardItem*		lpItem		= m_lpIPAddressModel->itemFromIndex(m_lpIPAddressModel->index(index.row(),0));
+	QStandardItem*		lpItem		= m_lpIPAddressModel->itemFromIndex(m_lpIPAddressModel->index(index.row(), 0));
 	if(!lpItem)
 		return;
 
@@ -708,6 +723,12 @@ void cMainWindow::onIPRangeCreate()
 	QString				szIPAddress	= lpIPAddress->IPAddress();
 	QString				szRange1	= "0.0.0.0/24";
 
+	lpItem							= m_lpIPAddressModel->itemFromIndex(m_lpIPAddressModel->index(index.row(), 2));
+	QString				szLocation;
+
+	if(lpItem)
+		szLocation					= lpItem->text();
+
 	if(szIPAddress.lastIndexOf("."))
 	{
 		szRange1	= szIPAddress.left(szIPAddress.lastIndexOf("."));
@@ -716,7 +737,7 @@ void cMainWindow::onIPRangeCreate()
 
 	cNewIPRange*	lpNewIPRange	= new cNewIPRange(this);
 	lpNewIPRange->setIPRange(szRange1);
-	lpNewIPRange->setLocation(m_locationList);
+	lpNewIPRange->setLocation(m_locationList, szLocation);
 	if(lpNewIPRange->exec() == QDialog::Rejected)
 	{
 		delete lpNewIPRange;
@@ -820,7 +841,26 @@ void cMainWindow::onIPRangeDelete()
 
 void cMainWindow::onLocationAdd()
 {
+	QString	szLocation;
+
+	if(ui->m_lpTab->currentIndex() == 1)
+	{
+		if(ui->m_lpIPAddressList->selectionModel()->selectedRows().count())
+		{
+			QStandardItem*	lpItem		= m_lpIPAddressModel->itemFromIndex(ui->m_lpIPAddressList->selectionModel()->selectedIndexes().at(0));
+			if(lpItem)
+			{
+				cIPAddress*	lpIPAddress	= qvariant_cast<cIPAddress*>(lpItem->data(Qt::UserRole));
+				if(lpIPAddress)
+					szLocation	= lpIPAddress->address();
+			}
+		}
+	}
+
 	cAddLocationDialog*	lpAddLocationDialog	= new cAddLocationDialog(this);
+
+	if(!szLocation.isEmpty())
+		lpAddLocationDialog->setLocation(szLocation);
 
 	if(lpAddLocationDialog->exec() == QDialog::Rejected)
 	{
@@ -1574,4 +1614,42 @@ bool cMainWindow::matchIPAddress(QStandardItem* lpItem, cIPAddress *lpIPAddress,
 		ui->m_lpIPAddressList->scrollTo(lpItem->index());
 	}
 	return(bFound);
+}
+
+void cMainWindow::onGotoRange()
+{
+	QModelIndex			index1		= ui->m_lpIPAddressList->currentIndex();
+	if(!index1.isValid())
+		return;
+
+	QStandardItem*		lpItem1		= m_lpIPAddressModel->itemFromIndex(m_lpIPAddressModel->index(index1.row(),1));
+	if(!lpItem1)
+		return;
+
+	QString				szIPRange	= lpItem1->text();
+
+	if(szIPRange.isEmpty())
+		return;
+
+	if(!m_lpIPRangeModel->rowCount())
+		return;
+
+	for(int x = 0;x < m_lpIPRangeModel->rowCount();x++)
+	{
+		QStandardItem*	lpItem		= m_lpIPRangeModel->item(x, 0);
+		cIPRange*		lpRange		= qvariant_cast<cIPRange*>(lpItem->data(Qt::UserRole));
+
+		if(!lpRange)
+			continue;
+
+		if(lpRange->name() == szIPRange)
+		{
+			ui->m_lpIPRangeList->selectionModel()->setCurrentIndex(lpItem->index(), QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+			ui->m_lpIPRangeList->scrollTo(lpItem->index());
+			ui->m_lpTab->setCurrentIndex(0);
+			return;
+		}
+	}
+
+	QMessageBox::information(this, "Find", "Nothing found.");
 }

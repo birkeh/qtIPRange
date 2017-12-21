@@ -22,7 +22,7 @@ public:
 	void			setIPRange(const QString& szIPRange);
 	QString			ipRange();
 
-	void			setLocation(const cLocationList& locationList);
+	void			setLocation(const cLocationList& locationList, const QString& szLocation = QString(""));
 	qint32			location();
 private:
 	Ui::cNewIPRange *ui;
