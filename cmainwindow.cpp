@@ -80,14 +80,11 @@ cMainWindow::cMainWindow(QWidget *parent) :
 	loadLocationList();
 	loadIPRangeList();
 	displayIPRangeList();
-/*
-	cIPAddress	ipAddress("91.113.117.7");
+
 	cIPRange*	lpIPRange;
-
-	lpIPRange	= m_ipRangeList.findRange("91.113.117.7");
-
+	lpIPRange	= m_ipRangeList.findRange("223.24.114.25");
 	lpIPRange	= 0;
-*/
+
 }
 
 cMainWindow::~cMainWindow()

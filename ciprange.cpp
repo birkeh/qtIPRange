@@ -259,6 +259,11 @@ cIPRange* cIPRangeList::findRange(const qint64& iIPAddress)
 	if(iIPAddress < at(0)->firstIPAddressBin())
 		return(0);
 
+	if(at(0)->ipInRange(iIPAddress))
+		return(at(0));
+	if(at(count()-1)->ipInRange(iIPAddress))
+		return(at(count()-1));
+
 	qint32	iStep	= (count()-1)/2;
 
 	for(int x = 0;x < count();x += iStep)
