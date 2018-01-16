@@ -144,7 +144,7 @@ qint64 cIPRange::subnet2BIN()
 
 qint64 cIPRange::subnet3BIN()
 {
-	return(subnetBIN() & 0x1200000);
+	return(subnetBIN() & 0xFFF00000);
 }
 
 void cIPRange::setOK(const bool& bOK)
