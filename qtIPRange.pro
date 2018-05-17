@@ -59,4 +59,5 @@ FORMS += \
 
 DISTFILES += \
     README.md \
-    qtIPRange.ico
+    qtIPRange.ico \
+    Doxyfile
