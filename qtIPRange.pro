@@ -8,6 +8,8 @@ QT       += core gui xml sql
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
+include(3rdparty/qtxlsx/src/xlsx/qtxlsx.pri)
+
 TARGET = qtIPRange
 TEMPLATE = app
 RC_ICONS = qtIPRange.ico

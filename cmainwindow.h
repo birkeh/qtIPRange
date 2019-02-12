@@ -90,6 +90,18 @@ private slots:
 	*/
 	void						on_m_lpMenuFileExportToDatabase_triggered();
 	/*!
+	 \brief This funtion is called when the menu entry "Export to Database" is triggered.
+
+	 \fn on_m_lpMenuFileExportToCSV_triggered
+	*/
+	void						on_m_lpMenuFileExportToCSV_triggered();
+	/*!
+	 \brief This funtion is called when the menu entry "Export to Database" is triggered.
+
+	 \fn on_m_lpMenuFileExportToDatabase_triggered
+	*/
+	void						on_m_lpMenuFileExportToExcel_triggered();
+	/*!
 	 \brief This funtion is called when the menu entry "Import IP Ranges from Database" is triggered.
 
 	 \fn on_m_lpMenuImportIPRangesFromDB_triggered

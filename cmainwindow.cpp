@@ -5,6 +5,8 @@
 
 #include "caddlocationdialog.h"
 
+#include "xlsxdocument.h"
+
 #include <QFileDialog>
 #include <QDir>
 
@@ -1089,6 +1091,164 @@ void cMainWindow::on_m_lpMenuFileExportToDatabase_triggered()
 
 	dbMySQL.commit();
 	dbMySQL.close();
+
+	m_lpProgressBar->setVisible(false);
+	ui->m_lpStatusBar->clearMessage();
+}
+
+void cMainWindow::on_m_lpMenuFileExportToCSV_triggered()
+{
+	QDir	dir;
+	QString	strHome		= dir.homePath() + QDir::separator();
+	QString	strFileName = QFileDialog::getSaveFileName(this, tr("Save to CSV file"), strHome, tr("CSV Files (*.csv)"));
+
+	if(strFileName.isEmpty())
+		return;
+
+	QFile	file(strFileName);
+	if(!file.open(QIODevice::WriteOnly | QIODevice::Text))
+		return;
+
+	qint16		cnt			= 0;
+	qint16		max			=m_lpIPRangeModel->rowCount()/200;
+
+	m_lpProgressBar->setVisible(true);
+	m_lpProgressBar->setMinimum(0);
+	m_lpProgressBar->setMaximum(m_ipRangeList.count());
+
+	ui->m_lpStatusBar->showMessage("exporting IP address list ...");
+
+	QTextStream out(&file);
+
+	out << "range;base ip;prefix;subnet mask;broadcast ip;first ip;last ip;location\n";
+
+	for(int x = 0;x < m_lpIPRangeModel->rowCount();x++)
+	{
+		QStandardItem*	lpRange			= m_lpIPRangeModel->item(x, 1);
+		QStandardItem*	lpBaseIP		= m_lpIPRangeModel->item(x, 2);
+		QStandardItem*	lpPrefix		= m_lpIPRangeModel->item(x, 3);
+		QStandardItem*	lpSubnetMask	= m_lpIPRangeModel->item(x, 4);
+		QStandardItem*	lpBroadcastIP	= m_lpIPRangeModel->item(x, 5);
+		QStandardItem*	lpFirstIP		= m_lpIPRangeModel->item(x, 6);
+		QStandardItem*	lpLastIP		= m_lpIPRangeModel->item(x, 7);
+		QStandardItem*	lpLocation		= m_lpIPRangeModel->item(x, 8);
+
+		out << "\"" << lpRange->text() << "\";";
+		out << "\"" << lpBaseIP->text() << "\";";
+		out << "\"" << lpPrefix->text() << "\";";
+		out << "\"" << lpSubnetMask->text() << "\";";
+		out << "\"" << lpBroadcastIP->text() << "\";";
+		out << "\"" << lpFirstIP->text() << "\";";
+		out << "\"" << lpLastIP->text() << "\";";
+		out << "\"" << lpLocation->text() << "\"\n";
+
+		cnt++;
+		if(cnt > max)
+		{
+			cnt = 0;
+			m_lpProgressBar->setValue(x);
+		}
+	}
+
+	file.close();
+
+	m_lpProgressBar->setVisible(false);
+	ui->m_lpStatusBar->clearMessage();
+}
+
+void cMainWindow::on_m_lpMenuFileExportToExcel_triggered()
+{
+	QDir	dir;
+	QString	strHome		= dir.homePath() + QDir::separator();
+	QString	strFileName = QFileDialog::getSaveFileName(this, tr("Save to Excel file"), strHome, tr("Excel Files (*.xlsx)"));
+
+	if(strFileName.isEmpty())
+		return;
+
+	qint16		cnt			= 0;
+	qint16		max			=m_lpIPRangeModel->rowCount()/200;
+
+	m_lpProgressBar->setVisible(true);
+	m_lpProgressBar->setMinimum(0);
+	m_lpProgressBar->setMaximum(m_ipRangeList.count());
+
+	ui->m_lpStatusBar->showMessage("exporting IP address list ...");
+
+	QXlsx::Format		format;
+	QXlsx::Format		formatBig;
+	QXlsx::Format		formatMerged;
+	QXlsx::Format		formatCurrency;
+	QXlsx::Format		formatNumber;
+	QXlsx::Format		formatDate;
+	QXlsx::Format		formatWrap;
+
+	QString				szNumberFormatCurrency("_-\"€\"\\ * #,##0.00_-;\\-\"€\"\\ * #,##0.00_-;_-\"€\"\\ * \"-\"??_-;_-@_-");
+	QString				szNumberFormatNumber("#,##0.00");
+	QString				szNumberFormatDate("dd.mm.yyyy");
+
+	format.setFontBold(true);
+
+	formatBig.setFontBold(true);
+	formatBig.setFontSize(16);
+
+	formatMerged.setHorizontalAlignment(QXlsx::Format::AlignLeft);
+	formatMerged.setVerticalAlignment(QXlsx::Format::AlignTop);
+
+	formatCurrency.setNumberFormat(szNumberFormatCurrency);
+	formatNumber.setNumberFormat(szNumberFormatNumber);
+	formatDate.setNumberFormat(szNumberFormatDate);
+
+	formatWrap.setTextWarp(true);
+
+	QXlsx::Document			xlsx;
+	QXlsx::Format			fmt;
+	fmt.setFontBold(true);
+	xlsx.write(1, 1, "empty");
+	xlsx.write(2, 1, "empty", fmt);
+	QFont					font		= xlsx.cellAt(1, 1)->format().font();
+	QFont					fontBold	= xlsx.cellAt(2, 1)->format().font();
+	fmt.setFontBold(false);
+	xlsx.write(1, 1, "");
+	xlsx.write(2, 1, "", fmt);
+
+	xlsx.write(1, 1, "range");
+	xlsx.write(1, 2, "base ip");
+	xlsx.write(1, 3, "prefix");
+	xlsx.write(1, 4, "subnet mask");
+	xlsx.write(1, 5, "broadcast ip");
+	xlsx.write(1, 6, "first ip");
+	xlsx.write(1, 7, "last ip");
+	xlsx.write(1, 8, "location");
+
+	for(int x = 0;x < m_lpIPRangeModel->rowCount();x++)
+	{
+		QStandardItem*	lpRange			= m_lpIPRangeModel->item(x, 1);
+		QStandardItem*	lpBaseIP		= m_lpIPRangeModel->item(x, 2);
+		QStandardItem*	lpPrefix		= m_lpIPRangeModel->item(x, 3);
+		QStandardItem*	lpSubnetMask	= m_lpIPRangeModel->item(x, 4);
+		QStandardItem*	lpBroadcastIP	= m_lpIPRangeModel->item(x, 5);
+		QStandardItem*	lpFirstIP		= m_lpIPRangeModel->item(x, 6);
+		QStandardItem*	lpLastIP		= m_lpIPRangeModel->item(x, 7);
+		QStandardItem*	lpLocation		= m_lpIPRangeModel->item(x, 8);
+
+		xlsx.write(x+2,  1, lpRange->text());
+		xlsx.write(x+2,  2, lpBaseIP->text());
+		xlsx.write(x+2,  3, lpPrefix->text());
+		xlsx.write(x+2,  4, lpSubnetMask->text());
+		xlsx.write(x+2,  5, lpBroadcastIP->text());
+		xlsx.write(x+2,  6, lpFirstIP->text());
+		xlsx.write(x+2,  7, lpLastIP->text());
+		xlsx.write(x+2,  8, lpLocation->text());
+
+		cnt++;
+		if(cnt > max)
+		{
+			cnt = 0;
+			m_lpProgressBar->setValue(x);
+		}
+	}
+
+	xlsx.saveAs(strFileName);
 
 	m_lpProgressBar->setVisible(false);
 	ui->m_lpStatusBar->clearMessage();
