@@ -3,6 +3,7 @@
 
 
 #include "ciprange.h"
+#include "csplashscreen.h"
 #include "clocation.h"
 
 #include "ciprangeitemdelegate.h"
@@ -38,7 +39,7 @@ public:
 	 \fn cMainWindow
 	 \param parent
 	*/
-	explicit cMainWindow(QWidget *parent = 0);
+	explicit cMainWindow(cSplashScreen* lpSplashScreen, QWidget *parent = nullptr);
 	/*!
 	 \brief Destroys the window.
 
@@ -249,12 +250,17 @@ private:
 	QString						m_szIPAddressFindText;		/*!< This is the text to be searched within the IP address list. */
 	quint16						m_IPAddressFindFlags;		/*!< This are the flags to narrow the IP address search. */
 
+	QString						m_szHostName;
+	QString						m_szDatabaseName;
+	QString						m_szUserName;
+	QString						m_szPassword;
+
 	/*!
 	 \brief Ths function is called to load the list of available locations from the database.
 
 	 \fn loadLocationList
 	*/
-	void						loadLocationList();
+	void						loadLocationList(cSplashScreen* lpSplashScreen = 0);
 
 	/*!
 	 \brief This function is called to load the list of available IP ranges from the database.
@@ -342,6 +348,15 @@ private:
 	 \return TRUE on success, FALSE otherwise.
 	*/
 	bool						matchIPAddress(QStandardItem* lpItem, cIPAddress* lpIPAddress, cFindDialogIPAddress::FindIn flag);
+
+protected:
+	/*!
+	 \brief
+
+	 \fn closeEvent
+	 \param event
+	*/
+	void						closeEvent(QCloseEvent* event);
 };
 
 #endif // CMAINWINDOW_H

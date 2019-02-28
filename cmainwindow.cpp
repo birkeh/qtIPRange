@@ -19,13 +19,20 @@
 #include <QFile>
 #include <QTextStream>
 #include <QStringList>
+#include <QSettings>
 
 #include <QElapsedTimer>
 
 #include <QMessageBox>
 
 
-cMainWindow::cMainWindow(QWidget *parent) :
+#define REPORTSERVER	"svuitpburedb01.tsa.prov-uniqa.net"
+#define REPORTDB		"reporting"
+#define	REPORTUSER		"reporting"
+#define REPORTPASS		"Kellerassel-1"
+
+
+cMainWindow::cMainWindow(cSplashScreen* lpSplashScreen, QWidget *parent) :
 	QMainWindow(parent),
 	ui(new Ui::cMainWindow),
 	m_szIPRangeFindText(""),
@@ -34,6 +41,12 @@ cMainWindow::cMainWindow(QWidget *parent) :
 	m_IPAddressFindFlags(cFindDialogIPAddress::FindInAll)
 {
 	ui->setupUi(this);
+
+	QSettings	settings;
+	m_szHostName		= settings.value("database/hostName", REPORTSERVER).toString();
+	m_szDatabaseName	= settings.value("database/databaseName", REPORTDB).toString();
+	m_szUserName		= settings.value("database/userName", REPORTUSER).toString();
+	m_szPassword		= settings.value("database/password", REPORTPASS).toString();
 
 	ui->m_lpTab->setCurrentIndex(0);
 	ui->m_lpMenuActionFindPreviousError->setEnabled(false);
@@ -79,19 +92,32 @@ cMainWindow::cMainWindow(QWidget *parent) :
 	ui->m_lpFilterError->setCheckState(Qt::PartiallyChecked);
 	ui->m_lpFilterOldLocation->setCheckState(Qt::PartiallyChecked);
 
-	loadLocationList();
+	loadLocationList(lpSplashScreen);
+
+	lpSplashScreen->showStatusMessage(QObject::tr("<center><big><big>loading ranges...</big></big></denter>"));
+	qApp->processEvents();
 	loadIPRangeList();
 	displayIPRangeList();
-/*
-	cIPRange*	lpIPRange;
-	lpIPRange	= m_ipRangeList.findRange("223.24.114.25");
-	lpIPRange	= 0;
-*/
 }
 
 cMainWindow::~cMainWindow()
 {
 	delete ui;
+}
+
+void cMainWindow::closeEvent(QCloseEvent *event)
+{
+	QSettings	settings;
+	settings.setValue("main/width", QVariant::fromValue(size().width()));
+	settings.setValue("main/height", QVariant::fromValue(size().height()));
+	settings.setValue("main/x", QVariant::fromValue(x()));
+	settings.setValue("main/y", QVariant::fromValue(y()));
+	if(this->isMaximized())
+		settings.setValue("main/maximized", QVariant::fromValue(true));
+	else
+		settings.setValue("main/maximized", QVariant::fromValue(false));
+
+	event->accept();
 }
 
 void cMainWindow::on_m_lpMenuFileOpen_triggered()
@@ -146,19 +172,31 @@ void cMainWindow::on_m_lpMenuFileSaveAs_triggered()
 {
 }
 
-void cMainWindow::loadLocationList()
+void cMainWindow::loadLocationList(cSplashScreen* lpSplashScreen)
 {
+	if(lpSplashScreen)
+	{
+		lpSplashScreen->showStatusMessage(QObject::tr("<center><big><big>connecting to database...</big></big></denter>"));
+		qApp->processEvents();
+	}
+
 	m_locationList.clear();
 
 	QSqlDatabase	dbMySQL	= QSqlDatabase::addDatabase("QMYSQL", "mysql");
-	dbMySQL.setHostName("10.69.208.60");
-	dbMySQL.setDatabaseName("reporting");
-	dbMySQL.setUserName("reporting");
-	dbMySQL.setPassword("reporting");
+	dbMySQL.setHostName(m_szHostName);
+	dbMySQL.setDatabaseName(m_szDatabaseName);
+	dbMySQL.setUserName(m_szUserName);
+	dbMySQL.setPassword(m_szPassword);
 	if(!dbMySQL.open())
 		qDebug() << dbMySQL.lastError().text();
 	else
 	{
+		if(lpSplashScreen)
+		{
+			lpSplashScreen->showStatusMessage(QObject::tr("<center><big><big>loading locations...</big></big></denter>"));
+			qApp->processEvents();
+		}
+
 		QSqlQuery	query(dbMySQL);
 
 		query.exec("SELECT		l.id id, "
@@ -877,10 +915,10 @@ void cMainWindow::on_m_lpMenuFileLoadClientsFromDB_triggered()
 	m_ipAddressList.clear();
 
 	QSqlDatabase	dbMySQL	= QSqlDatabase::addDatabase("QMYSQL", "mysql");
-	dbMySQL.setHostName("10.69.208.60");
-	dbMySQL.setDatabaseName("reporting");
-	dbMySQL.setUserName("reporting");
-	dbMySQL.setPassword("reporting");
+	dbMySQL.setHostName(m_szHostName);
+	dbMySQL.setDatabaseName(m_szDatabaseName);
+	dbMySQL.setUserName(m_szUserName);
+	dbMySQL.setPassword(m_szPassword);
 	if(!dbMySQL.open())
 		qDebug() << dbMySQL.lastError().text();
 	else
@@ -1013,10 +1051,10 @@ void cMainWindow::on_m_lpMenuFileExportToSQL_triggered()
 void cMainWindow::on_m_lpMenuFileExportToDatabase_triggered()
 {
 	QSqlDatabase	dbMySQL	= QSqlDatabase::addDatabase("QMYSQL", "mysql");
-	dbMySQL.setHostName("10.69.208.60");
-	dbMySQL.setDatabaseName("reporting");
-	dbMySQL.setUserName("reporting");
-	dbMySQL.setPassword("reporting");
+	dbMySQL.setHostName(m_szHostName);
+	dbMySQL.setDatabaseName(m_szDatabaseName);
+	dbMySQL.setUserName(m_szUserName);
+	dbMySQL.setPassword(m_szPassword);
 	if(!dbMySQL.open())
 	{
 		qDebug() << dbMySQL.lastError().text();
@@ -1257,10 +1295,10 @@ void cMainWindow::on_m_lpMenuFileExportToExcel_triggered()
 void cMainWindow::on_m_lpMenuImportIPRangesFromDB_triggered()
 {
 	QSqlDatabase	dbMySQL	= QSqlDatabase::addDatabase("QMYSQL", "mysql");
-	dbMySQL.setHostName("10.69.208.60");
-	dbMySQL.setDatabaseName("reporting");
-	dbMySQL.setUserName("reporting");
-	dbMySQL.setPassword("reporting");
+	dbMySQL.setHostName(m_szHostName);
+	dbMySQL.setDatabaseName(m_szDatabaseName);
+	dbMySQL.setUserName(m_szUserName);
+	dbMySQL.setPassword(m_szPassword);
 	if(!dbMySQL.open())
 	{
 		qDebug() << dbMySQL.lastError().text();

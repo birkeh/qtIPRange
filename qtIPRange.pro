@@ -37,7 +37,8 @@ SOURCES += \
     cfinddialogiprange.cpp \
     cfinddialogipaddress.cpp \
     caddlocationdialog.cpp \
-    caddcitydialog.cpp
+    caddcitydialog.cpp \
+    csplashscreen.cpp
 
 HEADERS += \
         cmainwindow.h \
@@ -49,7 +50,8 @@ HEADERS += \
     cfinddialogiprange.h \
     cfinddialogipaddress.h \
     caddlocationdialog.h \
-    caddcitydialog.h
+    caddcitydialog.h \
+    csplashscreen.h
 
 FORMS += \
         cmainwindow.ui \
@@ -63,3 +65,6 @@ DISTFILES += \
     README.md \
     qtIPRange.ico \
     Doxyfile
+
+RESOURCES += \
+    qtiprange.qrc
