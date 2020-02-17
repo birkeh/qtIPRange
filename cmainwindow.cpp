@@ -25,6 +25,8 @@
 
 #include <QMessageBox>
 
+#include <QCloseEvent>
+
 
 #define REPORTSERVER	"svuitpburedb01.tsa.prov-uniqa.net"
 #define REPORTDB		"reporting"
