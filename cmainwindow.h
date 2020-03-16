@@ -233,6 +233,8 @@ private slots:
 	*/
 	void						on_m_lpTab_currentChanged(int index);
 
+	void on_m_lpMenuImportIPRangesFromExcel_triggered();
+
 private:
 	Ui::cMainWindow*			ui;							/*!< This is the user interface of the main window.  */
 	QStandardItemModel*			m_lpIPRangeModel;			/*!< This is the item model for the IP range list. */

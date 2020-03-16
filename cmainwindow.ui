@@ -148,6 +148,7 @@
       <string>Import</string>
      </property>
      <addaction name="m_lpMenuImportIPRangesFromDB"/>
+     <addaction name="m_lpMenuImportIPRangesFromExcel"/>
     </widget>
     <addaction name="m_lpMenuFileOpen"/>
     <addaction name="m_lpMenuFileLoadClientsFromDB"/>
@@ -282,6 +283,11 @@
   <action name="m_lpMenuFileExportToExcel">
    <property name="text">
     <string>to Excel...</string>
+   </property>
+  </action>
+  <action name="m_lpMenuImportIPRangesFromExcel">
+   <property name="text">
+    <string>IP ranges from Excel</string>
    </property>
   </action>
  </widget>

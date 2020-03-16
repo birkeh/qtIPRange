@@ -7,6 +7,8 @@
 
 #include "xlsxdocument.h"
 
+#include "cimportexceldialog.h"
+
 #include <QFileDialog>
 #include <QDir>
 
@@ -961,6 +963,14 @@ void cMainWindow::on_m_lpMenuFileLoadClientsFromDB_triggered()
 	}
 	m_ipAddressList.sort();
 	displayIPAddressList();
+}
+
+
+void cMainWindow::on_m_lpMenuImportIPRangesFromExcel_triggered()
+{
+	cImportExcelDialog*	lpImportExcelDialog	= new cImportExcelDialog(this);
+	lpImportExcelDialog->exec();
+	delete lpImportExcelDialog;
 }
 
 void cMainWindow::on_m_lpMenuFileReloadLocationList_triggered()

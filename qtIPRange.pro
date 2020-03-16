@@ -27,6 +27,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 
 SOURCES += \
+    cimportexceldialog.cpp \
+    cimportexcelitemdelegate.cpp \
         main.cpp \
         cmainwindow.cpp \
     cipaddress.cpp \
@@ -41,6 +43,8 @@ SOURCES += \
     csplashscreen.cpp
 
 HEADERS += \
+    cimportexceldialog.h \
+    cimportexcelitemdelegate.h \
         cmainwindow.h \
     cipaddress.h \
     ciprange.h \
@@ -54,6 +58,7 @@ HEADERS += \
     csplashscreen.h
 
 FORMS += \
+    cimportexceldialog.ui \
         cmainwindow.ui \
     cnewiprange.ui \
     cfinddialogiprange.ui \
