@@ -27,6 +27,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 
 SOURCES += \
+    caddcitydialog.cpp \
+    caddcontinentdialog.cpp \
     cimportexceldialog.cpp \
     cimportexcelitemdelegate.cpp \
         main.cpp \
@@ -38,11 +40,11 @@ SOURCES += \
     cnewiprange.cpp \
     cfinddialogiprange.cpp \
     cfinddialogipaddress.cpp \
-    caddlocationdialog.cpp \
-    caddcitydialog.cpp \
     csplashscreen.cpp
 
 HEADERS += \
+    caddcitydialog.h \
+    caddcontinentdialog.h \
     cimportexceldialog.h \
     cimportexcelitemdelegate.h \
         cmainwindow.h \
@@ -53,18 +55,16 @@ HEADERS += \
     cnewiprange.h \
     cfinddialogiprange.h \
     cfinddialogipaddress.h \
-    caddlocationdialog.h \
-    caddcitydialog.h \
     csplashscreen.h
 
 FORMS += \
+    caddcitydialog.ui \
+    caddcontinentdialog.ui \
     cimportexceldialog.ui \
         cmainwindow.ui \
     cnewiprange.ui \
     cfinddialogiprange.ui \
-    cfinddialogipaddress.ui \
-    caddlocationdialog.ui \
-    caddcitydialog.ui
+    cfinddialogipaddress.ui
 
 DISTFILES += \
     README.md \

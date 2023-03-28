@@ -3,7 +3,7 @@
 
 #include "cnewiprange.h"
 
-#include "caddlocationdialog.h"
+#include "caddcitydialog.h"
 
 #include "xlsxdocument.h"
 
@@ -82,7 +82,7 @@ cMainWindow::cMainWindow(cSplashScreen* lpSplashScreen, QWidget *parent) :
 	{
 		query.exec("CREATE TABLE ip_range_location ( "
 				   "name TEXT, "
-				   "location_id INTEGER, "
+				   "cityID INTEGER, "
 				   "subnet INTEGER, "
 				   "prefix INTEGER, "
 				   "subnet1 INTEGER, "
@@ -91,6 +91,40 @@ cMainWindow::cMainWindow(cSplashScreen* lpSplashScreen, QWidget *parent) :
 				   "mask INTEGER, "
 				   "iplow INTEGER, "
 				   "iphigh INTEGER)");
+	}
+
+	if(!m_db.tables().contains("continent"))
+	{
+		query.exec("CREATE TABLE continent ( "
+				   "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+				   "name STRING)");
+	}
+
+	if(!m_db.tables().contains("country"))
+	{
+		query.exec("CREATE TABLE continent ( "
+				   "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+				   "name STRING, "
+				   "continentID INTEGER, "
+				   "CONSTRAINT country_continentID_FK FOREIGN KEY (continentID) REFERENCES continent(id))");
+	}
+
+	if(!m_db.tables().contains("region"))
+	{
+		query.exec("CREATE TABLE continent ( "
+				   "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+				   "name STRING, "
+				   "countryID INTEGER, "
+				   "CONSTRAINT region_countryID_FK FOREIGN KEY (countryID) REFERENCES country(id))");
+	}
+
+	if(!m_db.tables().contains("city"))
+	{
+		query.exec("CREATE TABLE continent ( "
+				   "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+				   "name STRING, "
+				   "regionID INTEGER, "
+				   "CONSTRAINT city_regionID_FK FOREIGN KEY (regionID) REFERENCES region(id))");
 	}
 
 	ui->m_lpFilterError->setCheckState(Qt::PartiallyChecked);
@@ -186,50 +220,40 @@ void cMainWindow::loadLocationList(cSplashScreen* lpSplashScreen)
 
 	m_locationList.clear();
 
-	QSqlDatabase	dbMySQL	= QSqlDatabase::addDatabase("QMYSQL", "mysql");
-	dbMySQL.setHostName(m_szHostName);
-	dbMySQL.setDatabaseName(m_szDatabaseName);
-	dbMySQL.setUserName(m_szUserName);
-	dbMySQL.setPassword(m_szPassword);
-	if(!dbMySQL.open())
-		qDebug() << dbMySQL.lastError().text();
-	else
+	if(lpSplashScreen)
 	{
-		if(lpSplashScreen)
-		{
-			lpSplashScreen->showStatusMessage(QObject::tr("<center><big><big>loading locations...</big></big></denter>"));
-			qApp->processEvents();
-		}
+		lpSplashScreen->showStatusMessage(QObject::tr("<center><big><big>loading locations...</big></big></denter>"));
+		qApp->processEvents();
+	}
 
-		QSqlQuery	query(dbMySQL);
+	QSqlQuery	query;
 
-		query.exec("SELECT		l.id id, "
-				   "			l.name name, "
-				   "			l.location location, "
-				   "			l.alternate_location alternate_location, "
-				   "			l.address address, "
-				   "			c.name country, "
-				   "			f.name federal_state, "
-				   "			ci.name city, "
-				   "			ci.postal_code "
-				   "FROM		location l "
-				   "LEFT JOIN	country c ON (c.id = l.country_id) "
-				   "LEFT JOIN	federal_state f ON (f.id = l.federal_state_id) "
-				   "LEFT JOIN	city ci ON (ci.id = l.city_id) "
-				   "ORDER BY 	name");
-		while(query.next())
-		{
-			cLocation*	lpLocation	= m_locationList.add(query.value("id").toInt());
-			lpLocation->setName(query.value("name").toString());
-			lpLocation->setLocation(query.value("location").toString());
-			lpLocation->setAlternateLocation(query.value("alternate_location").toString());
-			lpLocation->setAddress(query.value("address").toString());
-			lpLocation->setCountry(query.value("country").toString());
-			lpLocation->setFederalState(query.value("federal_state").toString());
-			lpLocation->setCity(query.value("city").toString());
-			lpLocation->setPostalCode(query.value("postal_code").toInt());
-		}
-		dbMySQL.close();
+	query.exec("SELECT		l.id id, "
+			   "			l.name name, "
+			   "			l.regionID, "
+			   "			l.location location, "
+			   "			l.alternate_location alternate_location, "
+			   "			l.address address, "
+			   "			c.name country, "
+			   "			f.name federal_state, "
+			   "			ci.name city, "
+			   "			ci.postal_code "
+			   "FROM		city ci "
+			   "LEFT JOIN	region r ON (ci.regionID = r.id) "
+			   "LEFT JOIN	country c ON (r.countryID = c.id) "
+			   "LEFT JOIN	continent co ON (c.continentID = co.id) "
+			   "ORDER BY 	name");
+	while(query.next())
+	{
+		cLocation*	lpLocation	= m_locationList.add(query.value("id").toInt());
+		lpLocation->setName(query.value("name").toString());
+		lpLocation->setLocation(query.value("location").toString());
+		lpLocation->setAlternateLocation(query.value("alternate_location").toString());
+		lpLocation->setAddress(query.value("address").toString());
+		lpLocation->setCountry(query.value("country").toString());
+		lpLocation->setFederalState(query.value("federal_state").toString());
+		lpLocation->setCity(query.value("city").toString());
+		lpLocation->setPostalCode(query.value("postal_code").toInt());
 	}
 }
 
